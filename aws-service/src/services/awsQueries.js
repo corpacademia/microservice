@@ -1,0 +1,16 @@
+module.exports = {
+    GET_INSTANCES_QUERY : `SELECT * FROM {table} WHERE vcpu = $1 AND memory = $2`,
+    GET_INSTANCES_QUERY_FOR_PRICING: `SELECT * FROM {table} WHERE REPLACE({column}, E'\n', '') = $1 AND vcpu = $2 AND memory = $3`,
+    DELETE_LAB_ASSIGNMENTS: `DELETE FROM labassignments WHERE lab_id = $1 AND user_id = $2`,
+    DELETE_CLOUD_ASSIGNED_INSTANCE: `DELETE FROM cloudassignedinstance WHERE lab_id = $1 AND user_id = $2`,
+    DELETE_AMI_INFORMATION: `DELETE FROM amiinformation WHERE lab_id = $1`,
+    DELETE_INSTANCES: `DELETE FROM instances WHERE lab_id = $1`,
+    DELETE_LAB_CONFIGURATIONS: `DELETE FROM lab_configurations WHERE lab_id = $1`,
+    DELETE_LAB_BATCH: `DELETE FROM lab_batch WHERE lab_id = $1`,
+    DELETE_LAB_ASSIGNMENTS_SUPER: `DELETE FROM labassignments WHERE lab_id = $1`,
+    DELETE_CREATE_LAB: `DELETE FROM createlab WHERE lab_id = $1`,
+    GET_CLOUD_ASSIGNED_INSTANCE: "SELECT * FROM cloudAssignedInstance WHERE user_id = $1 AND lab_id = $2",
+    CHECK_CLOUD_ASSIGNED_INSTANCE_LAUNCHED: "SELECT * FROM cloudassignedinstance WHERE lab_id = $1 AND user_id = $2",
+    CHECK_LAB_CLOUD_INSTANCE_LAUNCHED: "SELECT * FROM instances WHERE lab_id = $1",
+    
+   }
