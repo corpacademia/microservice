@@ -79,7 +79,7 @@ const getLabOnId = async(req,res)=>{
 const assignLab = async (req, res) => {
     try {
         const { lab, userId, assign_admin_id } = req.body;
-        const response = await labService.assignLab(lab, userId, assign_admin_id);
+        const response = await labService.assignLab(lab.lab_id, userId, assign_admin_id);
 
         return res.status(200).send({
             success: true,
@@ -135,7 +135,7 @@ const getInstanceOnParameters = async (req, res) => {
     try {
         const { cloud, cpu, ram } = req.body;
         const data = await labService.getInstanceOnParameters(cloud, cpu, ram);
-        console.log('data',data)
+      
         return res.status(200).send({
             success: true,
             message: "Successfully accessed the data",
@@ -256,9 +256,8 @@ const getAwsInstanceDetails = async (req, res) => {
 const getAwsInstanceDetailsOfUsers = async (req, res) => {
     try {
         const { lab_id, user_id } = req.body;
-
         const instanceDetails = await labService.getAwsInstanceDetailsOfUsers(lab_id, user_id);
-
+        console.log(instanceDetails)
         if (!instanceDetails) {
             return res.status(404).send({
                 success: false,

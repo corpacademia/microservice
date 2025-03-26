@@ -35,7 +35,7 @@ module.exports = {
     GET_INSTANCE_DETAILS: `SELECT * FROM instances WHERE lab_id=$1`,
     GET_USER_INSTANCE_DETAILS: `SELECT * FROM cloudassignedinstance WHERE lab_id=$1 AND user_id=$2`,
     UPDATE_USER_INSTANCE_STATE: `UPDATE cloudassignedinstance SET isRunning=$1 WHERE lab_id=$2 AND user_id=$3 RETURNING *`,
-    UPDATE_USER_INSTANCE_STATES: `UPDATE cloudassignedinstance SET isstarted=$1 , isRunnig=$2 WHERE lab_id=$3 AND user_id=$4 RETURNING *`,
+    UPDATE_USER_INSTANCE_STATES: `UPDATE cloudassignedinstance SET isstarted=$1 , isRunning=$2 WHERE lab_id=$3 AND user_id=$4 RETURNING *`,
     UPDATE_LAB_INSTANCE_STATE: `UPDATE instances SET isRunning=$1 WHERE lab_id=$2 RETURNING *`,
     UPDATE_LAB_INSTANCE_STATES: `UPDATE instances SET isstarted=$1, isRunning=$2 WHERE lab_id=$3 RETURNING *`,
    

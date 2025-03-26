@@ -96,6 +96,30 @@ const getWorkspaceOnId = async (req, res) => {
     }
 };
 
+const getWorkspaceByOrgId = async (req,res)=>{
+    try {
+        const { org_id } = req.params;
+        console.log('orgid',org_id)
+        const workspaces = await workspaceService.getWorkspaceByOrgIdService(org_id);
+        if (workspaces.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Workspace not found"
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Workspace Found",
+            data: workspaces
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message
+    });
+}
+}
 const editWorkspace = async (req, res) => {
     try {
         const { id } = req.params;
@@ -186,5 +210,6 @@ module.exports = {
     editWorkspace,
     deleteFile,
     deleteWorkspaces,
-    workspaceCount
+    workspaceCount,
+    getWorkspaceByOrgId,
 }

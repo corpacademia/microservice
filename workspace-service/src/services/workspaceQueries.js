@@ -1,3 +1,5 @@
+const { get } = require("../app");
+
 module.exports = {
     createWorkspace: `
         INSERT INTO workspace (lab_name, description, lab_type, date, documents, url, created_by, org_id) 
@@ -12,5 +14,7 @@ module.exports = {
         RETURNING *`,
         deleteWorkspaces: `DELETE FROM workspace WHERE id = ANY($1::uuid[]) RETURNING *`,
          getWorkspaceCount: `SELECT COUNT(*) FROM workspace WHERE org_id = $1`,
+
+         getWorkspaceByOrgId: `SELECT * FROM workspace WHERE org_id = $1`,
          
 };

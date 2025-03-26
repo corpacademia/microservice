@@ -4,7 +4,7 @@ const queries = require('./organizationQueries');
 const getAllOrganizations = async () => {
     try {
         const data = await pool.query(queries.GET_ALL_ORGANIZATIONS);
-        console.log(data)
+      
         return data.rows;
     } catch (error) {
         throw error;

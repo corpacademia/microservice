@@ -9,10 +9,10 @@ const { createWorkspace,
     deleteFile,
     deleteWorkspaces,
     workspaceCount,
+    getWorkspaceByOrgId,
  } = require('../controllers/workspaceController');
 
 const router = express.Router();
-
 // Ensure uploads folder exists
 const uploadDir = path.join(__dirname, '../public/uploads/');
 if (!fs.existsSync(uploadDir)) {
@@ -39,5 +39,6 @@ router.post('/editWorkspace/:id',upload.array('files'), editWorkspace);
 router.post('/removeWorkspaceDocument', deleteFile);
 router.post('/deleteWorkspace', deleteWorkspaces);
 router.get('/workspaceCount/:org_id', workspaceCount);
+router.get('/getOrganizationWorkspaces/:org_id', getWorkspaceByOrgId);
 
 module.exports = router;

@@ -58,7 +58,6 @@ const loginController = async (req, res) => {
             });
         }
         // Set the JWT token in an HTTP-only cookie
-        console.log(result.token)
         res.cookie("session_token", result.token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -86,7 +85,6 @@ const loginController = async (req, res) => {
 const getAllUsers = async (req, res) => {
     try {
         const users = await userServices.getAllUsers();
-
         if (!users || users.length === 0) {
             return res.status(204).send({
                 success: false,
@@ -162,6 +160,17 @@ const getUserData = async (req, res) => {
 };
 const logoutController = async(req,res)=>{
     try{
+
+      const result = await userServices.logoutService(req.body.email);
+     
+      if(!result.success){
+          return res.status(400).send({
+              success:false,
+              message:result.message
+          })
+
+      }
+
         res.clearCookie("session_token")
         return res.status(200).send({
             success:true,
@@ -169,6 +178,7 @@ const logoutController = async(req,res)=>{
         })
     }
     catch(error){
+      console.log("error",error)
         return res.status(500).send({
             success:false,
             message:"Could not log out",
@@ -210,7 +220,6 @@ const updateUserRole = async (req, res) => {
   const getTokenAndGetUserDetails = async (req, res, next) => {
     try {
       const token = req.cookies.session_token || req.headers.authorization;
-      console.log("token",req.cookies)
       req.userData = await userServices.getTokenAndGetUserDetails(token);
       next();
     } catch (error) {
@@ -221,11 +230,12 @@ const updateUserRole = async (req, res) => {
   const updateUserController = async (req, res) => {
     try {
       const { id } = req.params;
-      const { name, email, password } = req.body;
-      const updatedUser = await userServices.updateUserDetails(id, name, email, password);
+      const { name, email, password ,status ,role} = req.body;
+      const updatedUser = await userServices.updateUserDetails(id, name, email, password ,status,role);
       res.status(200).send({ success: true, message: "User updated successfully", data: updatedUser });
     } catch (error) {
-      res.status(400).send({ success: false, message: error.message });
+      console.log("error",error)
+      res.status(400).send({ success: false, message:error.message,error:error.message });
     }
   };
   
@@ -249,6 +259,17 @@ const updateUserRole = async (req, res) => {
       res.status(400).send({ success: false, message: error.message });
     }
   };
+const deleteRandomUsers = async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    const deletedData = await userServices.deleteRandomUsers(userIds);
+    res.status(200).send({ success: true, message: "Users deleted successfully", data: deletedData });
+  } catch (error) {
+    res.status(400).send({ success: false, message: error.message });
+  }
+}
+
+  
 
 
 // Controller: Add Organization User
@@ -274,6 +295,7 @@ const addOrganizationUser = async (req, res) => {
   const getOrganizationUser = async (req, res) => {
     try {
       const users = await userServices.getOrganizationUsers(req.body.admin_id);
+      
       if (!users.length) {
         return res.status(404).send({
           success: false,
@@ -349,4 +371,5 @@ module.exports={
     getOrganizationUser,
     updateUser,
     insertUsers,
+    deleteRandomUsers
 }

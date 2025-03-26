@@ -1,6 +1,7 @@
 const pool = require('../dbconfig/db');
 const {hashPassword,comparePassword,signJwt,verifyToken} = require('../helper/authHelper');
 const userQueries = require('../services/userQueries');
+const bcrypt = require('bcrypt');
 
 const signupService = async (name, email, password) => {
     try {
@@ -37,12 +38,17 @@ const loginService = async (email, password) => {
         const day = currentDate.getDate();
         const month = currentDate.getMonth();
         const year = currentDate.getFullYear();
+        const hours = currentDate.getHours();
+        const minutes = currentDate.getMinutes();
+        const seconds = currentDate.getSeconds();
+        
         const monthNames = [
             "January", "February", "March", "April", "May", "June", 
             "July", "August", "September", "October", "November", "December"
         ];
-        const lastActiveDate = `${day} ${monthNames[month]} ${year}`;
-
+        
+        const lastActiveDate = `${day} ${monthNames[month]} ${year} ${hours}:${minutes}:${seconds}`;
+        
         const updateQuery = user.admin_id 
             ? userQueries.updateOrgUserLastActiveQuery 
             : userQueries.updateUserLastActiveQuery;
@@ -60,17 +66,36 @@ const loginService = async (email, password) => {
     } catch (error) {
         throw error;
     }
-};
+
+  };
+
+const logoutService = async (email) => {
+    try {
+      const userStatus = await pool.query(userQueries.updateUserStatusOnLogout, [email]);
+      if (!userStatus.rows[0]) {
+        const orgUserStatus = await pool.query(userQueries.updateOrgUserStatusOnLogout, [email]);
+        if (!orgUserStatus.rows[0]) {
+          return { success: false, message: "User not found" };
+        }
+        
+      }
+      return {success:true,message:"User logged out successfully"};
+    } catch (error) {
+      throw error;
+    }
+  }
 
 const getAllUsers = async () => {
-    const result = await pool.query(userQueries.getAllUsers);
-    return result.rows;
+    const userResult = await pool.query(userQueries.getAllUsers);
+    const orgUserResult = await pool.query(userQueries.getAllOrgUsers);
+    const result = [...userResult.rows, ...orgUserResult.rows];
+    return result;
 };
 
 const addUser = async (userData) => {
-    const { name, email, role, organization } = userData.formData;
+    const { name, email,password, role, organization } = userData.formData;
     const { id } = userData.user;
-    const password = '123';
+    const [orgName,orgType,orgId]= organization.split(',').map(val=>val.trim());
     const hashedPassword = await hashPassword(password);
 
     const result = await pool.query(userQueries.addUser, [
@@ -78,7 +103,9 @@ const addUser = async (userData) => {
         email,
         hashedPassword,
         role,
-        organization,
+        orgName,
+        orgType,
+        orgId,
         id,
     ]);
 
@@ -104,20 +131,36 @@ const getUserData = async (userId) => {
 };
 
 const updateUserOrganization = async (userId, values) => {
-    const [orgName, type] = values.split(',');
+  if (!values || typeof values !== 'string') {
+      throw new Error('Invalid input values');
+  }
 
-    if (!userId || !orgName || !type) {
-        throw new Error('Some field is missing');
-    }
+  const [orgName, type, orgId] = values.split(',').map(val => val.trim());
 
-    const update = await pool.query(userQueries.updateUserOrganization, [orgName, type, userId]);
+  if (!userId || !orgName || !type || !orgId) {
+      throw new Error('Some field is missing');
+  }
 
-    if (!update.rows[0]) {
-        throw new Error('Invalid field or userId');
-    }
+  try {
+      const user = await pool.query(userQueries.getUserById, [userId]);
+      if (user.rows.length > 0) {
+          const update = await pool.query(userQueries.updateUserOrganizationDetails, [orgName, type, orgId, userId]);
+          return update.rows.length > 0 ? update.rows[0] : null;
+      }
 
-    return update.rows[0];
+      const orgUser = await pool.query(userQueries.getOrgUserById, [userId]);
+      if (orgUser.rows.length > 0) {
+          const update = await pool.query(userQueries.updateUserOrganizationOfOrg, [orgName, type, orgId, userId]);
+          return update.rows.length > 0 ? update.rows[0] : null;
+      }
+
+      throw new Error('User not found');
+  } catch (error) {
+      console.error('Error updating user organization:', error);
+      throw error;
+  }
 };
+
 
 const updateUserRole = async (userId, role) => {
     if (!userId || !role) throw new Error("User ID or role is missing");
@@ -143,21 +186,19 @@ const updateUserRole = async (userId, role) => {
     throw new Error("User not found");
   };
   
-  const updateUserDetails = async (id, name, email, password) => {
+  const updateUserDetails = async (id, name, email, password ,status,role) => {
     if (!id) throw new Error("User ID is required");
-  
     let result = await pool.query(userQueries.GET_USER_BY_ID, [id]);
     if (result.rows.length > 0) {
       const existingUser = result.rows[0];
       if (password && (await bcrypt.compare(password, existingUser.password)))
         throw new Error("New password cannot be same as the old password");
-  
       const query = password
         ? userQueries.UPDATE_USER
         : userQueries.UPDATE_USER_NO_PASSWORD;
       const values = password
-        ? [name, email, await bcrypt.hash(password, 10), id]
-        : [name, email, id];
+        ? [name, email, await bcrypt.hash(password, 10),status,role, id]
+        : [name, email,status,role, id];
   
       result = await pool.query(query, values);
       return result.rows[0];
@@ -173,8 +214,8 @@ const updateUserRole = async (userId, role) => {
         ? userQueries.UPDATE_ORG_USER
         : userQueries.UPDATE_ORG_USER_NO_PASSWORD;
       const values = password
-        ? [name, email, await bcrypt.hash(password, 10), id]
-        : [name, email, id];
+        ? [name, email, await bcrypt.hash(password, 10), status,role,id ]
+        : [name, email,status,role, id,];
   
       result = await pool.query(query, values);
       return result.rows[0];
@@ -186,7 +227,7 @@ const updateUserRole = async (userId, role) => {
   const getUsersFromOrganization = async (orgId) => {
     const [usersResult, orgUsersResult] = await Promise.all([
       pool.query(userQueries.GET_USERS_FROM_ORG, [orgId]),
-      pool.query(userQueries.GET_ORG_USERS, [orgId]),
+      pool.query(userQueries.GET_ORG_USERS_ORGID, [orgId]),
     ]);
   
     const users = [...usersResult.rows, ...orgUsersResult.rows];
@@ -204,7 +245,6 @@ const updateUserRole = async (userId, role) => {
     const deletedUsers = await pool.query(userQueries.DELETE_USERS, [userIds, orgId]);
     const deletedUserIds = deletedUsers.rows.map((row) => row.id);
     const remainingUserIds = userIds.filter((id) => !deletedUserIds.includes(id));
-  
     let deletedOrgUsers = [];
     if (remainingUserIds.length > 0) {
       deletedOrgUsers = await pool.query(userQueries.DELETE_ORG_USERS, [remainingUserIds, orgId]);
@@ -215,13 +255,42 @@ const updateUserRole = async (userId, role) => {
     return { deletedUserIds, deletedOrgUsers: deletedOrgUsers.rows.map((row) => row.id) };
   };
   
+  const deleteRandomUsers = async (userIds) => {
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+        throw new Error("Invalid or missing userIds array");
+    }
+
+    try {
+        // Delete users from the main 'users' table
+        const deletedUsers = await pool.query(userQueries.DELETE_RANDOM_USERS, [userIds]);
+        const deletedUserIds = deletedUsers.rows.map(row => row.id);
+
+        // Find remaining users that were not deleted
+        const remainingUserIds = userIds.filter(id => !deletedUserIds.includes(id));
+
+        let deletedOrgUsers = [];
+        if (remainingUserIds.length > 0) {
+            const deletedOrgResponse = await pool.query(userQueries.DELETE_RANDOM_ORG_USERS, [remainingUserIds]);
+            deletedOrgUsers = deletedOrgResponse.rows.map(row => row.id);
+        }
+
+        return {
+            deletedUserIds,
+            deletedOrgUsers
+        };
+    } catch (error) {
+        console.error("Error deleting users:", error);
+        throw new Error("Failed to delete users");
+    }
+};
+
 
   // Add Organization User
 const addOrganizationUser = async (userData) => {
-    const { name, email, password, role, admin_id } = userData;
+    const { name, email, password, role, admin_id ,organization,org_id,organization_type} = userData;
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    const result = await pool.query(userQueries.ADD_ORG_USER, [name, email, hashedPassword, role, admin_id]);
+    const result = await pool.query(userQueries.ADD_ORG_USER, [name, email, hashedPassword, role, admin_id,organization,org_id,organization_type]);
     return result.rows[0];
   };
   
@@ -233,18 +302,38 @@ const addOrganizationUser = async (userData) => {
   
   // Update User (Checks both users and organization_users)
   const updateUser = async (id, userData) => {
-    const { name, email, role, status } = userData;
-  
+    const { name, email, role, status ,password} = userData;
     const userResult = await pool.query(userQueries.GET_USER_BY_ID, [id]);
     if (userResult.rows.length > 0) {
-      await pool.query(userQueries.UPDATE_USER, [name, email, role, status, id]);
-      return { message: "User updated successfully in users table" };
-    }
+      if (password && (await bcrypt.compare(password, existingUser.password)))
+        throw new Error("New password cannot be same as the old password");
+  
+      const query = password
+        ? userQueries.UPDATE_USER
+        : userQueries.UPDATE_USER_NO_PASSWORD;
+      const values = password
+        ? [name, email, await bcrypt.hash(password, 10),status,role, id]
+        : [name, email,status,role, id];
+  
+      result = await pool.query(query, values);
+      return result.rows[0];
+}
   
     const orgUserResult = await pool.query(userQueries.GET_ORG_USER_BY_ID, [id]);
     if (orgUserResult.rows.length > 0) {
-      await pool.query(userQueries.UPDATE_ORG_USER, [name, email, role, status, id]);
-      return { message: "User updated successfully in organization_users table" };
+      const existingUser = result.rows[0];
+      if (password && (await bcrypt.compare(password, existingUser.password)))
+        throw new Error("New password cannot be same as the old password");
+  
+      const query = password
+        ? userQueries.UPDATE_ORG_USER
+        : userQueries.UPDATE_ORG_USER_NO_PASSWORD;
+      const values = password
+        ? [name, email, await bcrypt.hash(password, 10), status,role,id ]
+        : [name, email,status,role, id,];
+  
+      result = await pool.query(query, values);
+      return result.rows[0];
     }
   
     throw new Error("User not found in both tables");
@@ -276,4 +365,6 @@ module.exports = {
   getOrganizationUsers,
   updateUser,
   insertUsers,
+  logoutService,
+  deleteRandomUsers,
  };

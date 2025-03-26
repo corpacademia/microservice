@@ -17,6 +17,7 @@ const {
     insertUsers,
     addOrganizationUser,
     getOrganizationUser,
+    deleteRandomUsers,
 } = require('../controllers/authController');
 
 //api router
@@ -33,7 +34,7 @@ router.put('/updateUserRole',updateUserRole);
 router.get('/user_profile', getTokenAndGetUserDetails, (req, res) => {
     res.json({ user: req.userData });
   });
-router.get('/logout',logoutController);
+router.post('/logout',logoutController);
 router.put('/updateUser/:id',updateUserController);
 router.get('/getUsersFromOrganization/:orgId',getUsersFromOrganization);
 router.post('/deleteOrganizationUsers',deleteUsers);
@@ -41,5 +42,6 @@ router.put('/updateUserFromSuperadmin/:id',updateUser);
 router.post('/insertUsers',insertUsers);
 router.post('/addOrganizationUser',addOrganizationUser);
 router.post('/getOrganizationUsers',getOrganizationUser);
+router.post('/deleteUsers',deleteRandomUsers)
 
  module.exports = router;

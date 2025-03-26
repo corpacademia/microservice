@@ -149,7 +149,6 @@ const getInstanceOnParameters = async (cloud, cpu, ram) => {
 
         const core = cpu.toString();
         const memory = ram.toString();
-        console.log(labQueries)
         const query = labQueries.GET_INSTANCES_DETAILS(table);
         const result = await pool.query(query, [core, memory]);
 
@@ -369,7 +368,6 @@ const getLabCatalogues = async () => {
   const getOperatingSystems = async () => {
     try {
         const result = await pool.query(labQueries.GET_OPERATING_SYSTEMS);
-        console.log("Query result:", result.rows); // ✅ Proper logging
 
         if (result.rowCount === 0) {  // ✅ Safer check
             return { success: false, message: "Could not get the operating systems", data: null };

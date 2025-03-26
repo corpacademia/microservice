@@ -161,9 +161,6 @@ const editOrganizationModal = async (req, res) => {
     try {
         const orgId = req.params.orgId;
         const data = req.body;
-        console.log("files", req.file);
-        console.log("data", req.body);
-        console.log("orgId", orgId);
         const logo = req.file ? req.file.path : null;
         const updatedOrganization = await organizationServices.updateOrganizationService(orgId, data, logo);
 

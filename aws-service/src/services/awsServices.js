@@ -179,7 +179,7 @@ const goldenToInstanceForNewCatalogueLogic = async (instanceType, amiId, storage
 const deleteLabService = async (labId, instanceId, amiId, userId) => {
   try {
     if (!labId || !instanceId || !amiId || !userId) {
-      throw new Error("ID is required");
+      console.error("ID is required");
     }
     // Execute Python script to delete VM from the cloud
     const scriptPath = "../terraformScripts/deleteInstance.py";

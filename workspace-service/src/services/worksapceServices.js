@@ -14,7 +14,6 @@ const createWorkspaceService = async (workspaceData) => {
         workspaceData.user,
         workspaceData.org_id
     ];
-
     try {
         const response = await pool.query(queries.createWorkspace, values);
         return response.rows[0]; // Returning created workspace data
@@ -31,6 +30,18 @@ const getWorkspaceByUserIdService = async (userId) => {
         throw new Error(error.message);
     }
 };
+
+const getWorkspaceByOrgIdService = async (org_id) => {
+    try {
+        if(!org_id){
+            throw new Error("Organization ID is required");
+        }
+        const response = await pool.query(queries.getWorkspaceByOrgId, [org_id]);
+        return response.rows;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
 
 const getWorkspaceByIdService = async (workspaceId) => {
     try {
@@ -124,4 +135,5 @@ module.exports = {
     deleteFileService,
     deleteWorkspacesService,
     getWorkspaceCountService,
+    getWorkspaceByOrgIdService,
 }
