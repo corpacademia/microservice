@@ -6,7 +6,8 @@
         "service4": "cd lab-service && npm start",
         "service5": "cd user-service && npm start",
         "service6": "cd api-gateway && npm start",
-        "start": "concurrently \"cd workspace-service && npm start\" \"cd organization-service && npm start\" \"cd aws-service && npm start\" \"cd lab-service && npm start\" \"cd user-service && npm start\" \"cd api-gateway && npm start\""
+        "service7": "cd cloud-slice-service && npm start",
+        "start": "concurrently \"cd workspace-service && npm start\" \"cd organization-service && npm start\" \"cd aws-service && npm start\" \"cd lab-service && npm start\" \"cd user-service && npm start\" \"cd api-gateway && npm start\" \"cd cloud-slice-service && npm start\""
     },
     "devDependencies": {
         "concurrently": "^9.1.2",

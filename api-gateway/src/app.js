@@ -41,5 +41,6 @@ app.use('/api/v1/lab_ms',require('./routes/lab'));   //lab microservice route
 app.use('/api/v1/aws_ms',require('./routes/aws_service')); //aws microservice route
 app.use('/api/v1/organization_ms',require('./routes/organizations')); //organizations microservice route
 app.use('/api/v1/workspace_ms',require('./routes/workspaces')); //workspaces microservice route
+app.use('/api/v1/cloud_slice_ms',require('./routes/cloudSliceService')); //cloud slice microservice route
 
 module.exports = app;
