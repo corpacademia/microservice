@@ -35,7 +35,7 @@ const getLabOnId = async(labId)=>{
     try{
         const result = await pool.query(labQueries.GET_LAB_ON_ID,[labId]);
 
-        return result;
+        return result.rows[0];
     }
     catch(error){
        console.log("Error in getlabonid service:",error)
@@ -47,7 +47,6 @@ const assignLab = async (lab, userIds, assign_admin_id) => {
     try {
         // Normalize `userIds` to an array
         userIds = Array.isArray(userIds) ? userIds : [userIds];
-
         // Get configuration details
         const getDays = await pool.query(labQueries.GET_CONFIG_DETAILS, [lab, assign_admin_id]);
         if (!getDays.rows.length) {

@@ -11,7 +11,7 @@ const getAllAwsServices = async(req,res)=>{
         return  result.rows;
     } catch (error) {
         console.log(error);
-        throw new error('Error in getAllAwsServices function',error);
+        throw new Error('Error in getAllAwsServices function',error);
     }
 }
 

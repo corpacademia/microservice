@@ -79,7 +79,7 @@ const getLabOnId = async(req,res)=>{
 const assignLab = async (req, res) => {
     try {
         const { lab, userId, assign_admin_id } = req.body;
-        const response = await labService.assignLab(lab.lab_id, userId, assign_admin_id);
+        const response = await labService.assignLab(lab, userId, assign_admin_id);
 
         return res.status(200).send({
             success: true,
@@ -215,7 +215,6 @@ const awsConfigure = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
         return res.status(500).send({
             success: false,
             message: "Error accessing AMI information",
@@ -531,7 +530,7 @@ const getLabCatalogues = async (req, res) => {
       const catalogueData = req.body;
       const newCatalogue = await labService.createNewCatalogue(catalogueData);
   
-      return res.status(200).json({
+      return res.status(200).send({
         success: true,
         message: "Successfully stored the catalogue",
         output: newCatalogue,
@@ -539,7 +538,7 @@ const getLabCatalogues = async (req, res) => {
     } catch (error) {
       console.error("Error creating catalogue:", error.message);
   
-      return res.status(500).json({
+      return res.status(500).send({
         success: false,
         message: "Could not create the lab",
         error: error.message,

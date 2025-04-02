@@ -87,10 +87,10 @@ const deleteOrgAssignedCloudVms = async (req, res) => {
 
 const createOrganization = async (req, res) => {
     try {
-        const { organization_name, admin_name, email, phone, address, website, org_type, org_id, admin_id } = req.body;
+        const { organization_name, admin_name, email, phone, address, website, org_type, org_id } = req.body;
         const logoPath = req.file ? req.file.path : null;
 
-        if (!organization_name || !email || !admin_id || !org_type || !admin_name || !phone || !address || !website || !org_id || !logoPath) {
+        if (!organization_name || !email || !org_type || !admin_name || !phone || !address || !website || !org_id || !logoPath) {
             return res.status(400).send({
                 success: false,
                 message: "All fields are required"
@@ -100,7 +100,6 @@ const createOrganization = async (req, res) => {
         const organization = await organizationServices.createOrganizationService({
             organization_name,
             email,
-            admin_id,
             org_type,
             admin_name,
             phone,

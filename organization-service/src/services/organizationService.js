@@ -40,7 +40,6 @@ const createOrganizationService = async (organizationData) => {
         const {
             organization_name,
             email,
-            admin_id,
             org_type,
             admin_name,
             phone,
@@ -53,7 +52,6 @@ const createOrganizationService = async (organizationData) => {
         const response = await pool.query(queries.CREATE_ORGANIZATION, [
             organization_name,
             email,
-            admin_id,
             org_type,
             admin_name,
             phone,

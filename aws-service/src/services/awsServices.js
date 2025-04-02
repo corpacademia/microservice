@@ -10,17 +10,21 @@ const executePythonScript = async (scriptName, args = []) => {
     let errorResult = "";
 
     pythonProcess.stdout.on("data", (data) => {
+      console.log(data.toString())
       result += data.toString();
     });
 
     pythonProcess.stderr.on("data", (data) => {
+      console.log(data.toString())
       errorResult += data.toString();
     });
 
     pythonProcess.on("close", (code) => {
       if (code === 0) {
+        console.log(result.trim())
         resolve(result.trim());
       } else {
+        console.log(errorResult.trim())
         reject(errorResult.trim());
       }
     });
@@ -167,7 +171,6 @@ const goldenToInstanceForNewCatalogueLogic = async (instanceType, amiId, storage
     console.log("Executing GoldenImageToInstanceForNewCatalogue script...");
     const scriptPath = "../terraformScripts/goldenToInstanceForNewCatalogue.py";
     const args = [instanceType, amiId, storageSize, labId, prevLabId];
-
     const result = await executePythonScript(scriptPath, args);
     
     return { success: true, message: "GoldenImageToInstanceForNewCatalogue script executed successfully", result };
@@ -260,6 +263,7 @@ const handleLaunchSoftwareOrStopService = async (osName, instanceId, hostname, p
           jwtToken,
       };
   } catch (error) {
+      console.log(error)
       throw new Error(`Could not Launch or Stop software: ${error.message}`);
   }
 };
