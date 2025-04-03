@@ -69,4 +69,5 @@ CREATE_CATALOGUE: `
     RETURNING *`,
     GET_OPERATING_SYSTEMS: 'SELECT * FROM operating_systems',
     GET_ASSIGNED_LABS_ON_LABID:"SELECT * from labassignments where lab_id=$1 and user_id=$2",
+UPDATE_LAB_STATUS: `UPDATE createlab SET status=$1 WHERE lab_id=$2 RETURNING *`,
 }

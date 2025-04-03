@@ -25,6 +25,7 @@ const {
     checkLabCloudInstanceLaunched,
     stopInstance,
     restartInstance,
+    labProgress,
 } = require('../controllers/awsController');
 const { awsConfigure } = require('../../../lab-service/src/controllers/labController');
 
@@ -52,6 +53,7 @@ router.post('/checkIsLabInstanceLaunched', checkLabCloudInstanceLaunched);
 router.post('/stopInstance', stopInstance);
 router.post('/restart_instance',restartInstance);
 router.post('/checkvmcreated',awsConfigure);
+router.get('/labprogress',labProgress);
 
 module.exports = router;
 

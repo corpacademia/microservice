@@ -7,6 +7,10 @@ const path = require('path');
 
 const organizationRouter = require('./routes/organizationRoutes');
 
+//tables
+const tables = require('./db/organizationTables');
+tables();   
+
 //middlewares
 app.use(cors({
     origin:'http://localhost:5173',

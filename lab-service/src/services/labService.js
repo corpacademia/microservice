@@ -2,11 +2,13 @@ const pool = require('../db/dbConfig');
 const labQueries = require('./labQueries');
 const queries = require('./labQueries');
 
+
+
 //lab tables that contains the details of the lab
 const createLab=async(data,user)=>{
     try{
        const {type,details,platform,provider,config,instance} = data;
-       const output = await pool.query(queries.CREATE_LAB,[user.id,type,platform,provider,config.os,config.os_version,config.cpu,config.ram,config.storage,instance,details.title,details.description,details.duration,config.snapshot_type])
+       const output = await pool.query(queries.CREATE_LAB,[user.id,type,platform,provider,config.os,config.os_version,config.cpu,config.ram,config.storage,instance,details.title,details.description,details.duration,config.snapshotType])
        
        return output.rows[0];
     }
@@ -35,7 +37,7 @@ const getLabOnId = async(labId)=>{
     try{
         const result = await pool.query(labQueries.GET_LAB_ON_ID,[labId]);
 
-        return result;
+        return result.rows[0];
     }
     catch(error){
        console.log("Error in getlabonid service:",error)
@@ -47,7 +49,6 @@ const assignLab = async (lab, userIds, assign_admin_id) => {
     try {
         // Normalize `userIds` to an array
         userIds = Array.isArray(userIds) ? userIds : [userIds];
-
         // Get configuration details
         const getDays = await pool.query(labQueries.GET_CONFIG_DETAILS, [lab, assign_admin_id]);
         if (!getDays.rows.length) {
@@ -380,6 +381,16 @@ const getLabCatalogues = async () => {
     }
 };
 
+ const updateSigleVmLabStatus = async(labId,status)=>{
+     try {
+        const result = await pool.query(queries.UPDATE_LAB_STATUS,[status,labId]);
+        return result.rows[0]; // Return the updated lab status
+     } catch (error) {
+        throw new Error("Error in updating the lab status:",error.message);
+     }
+ }
+
+
 
 module.exports = {
     createLab,
@@ -408,4 +419,5 @@ module.exports = {
     createNewCatalogue,
     getOperatingSystems,
     getAssignLabOnLabId,
+    updateSigleVmLabStatus,
 }

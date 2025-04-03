@@ -8,6 +8,10 @@ const app =express();
 
 const workspaceRouter = require('./routes/workspaceRoutes');
 
+//tables
+const tables = require('./db/workspaceTables');
+ tables;
+
 //middlewares
 app.use(express.json());
 app.use(bodyParser.json());

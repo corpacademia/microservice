@@ -11,7 +11,8 @@ const getAllAwsServices = async(req,res)=>{
         }
             return res.status(200).send({
                 success:true,
-                message:"Successfully fetched all aws services"
+                message:"Successfully fetched all aws services",
+                data:result
             })
         
     } catch (error) {

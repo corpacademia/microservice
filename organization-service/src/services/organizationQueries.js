@@ -5,8 +5,8 @@ module.exports = {
     DELETE_LAB_BATCH: `DELETE FROM lab_batch WHERE lab_id = $1`,
     CREATE_ORGANIZATION: `
         INSERT INTO organizations
-        (organization_name, org_email, org_admin, org_type, admin_name, phone_number, address, website_url, org_id, logo) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+        (organization_name, org_email, org_type, admin_name, phone_number, address, website_url, org_id, logo) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
         RETURNING *`,
         GET_USERS_COUNT: `
         SELECT COUNT(*) AS user_count 

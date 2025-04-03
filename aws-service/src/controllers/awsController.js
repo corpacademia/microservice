@@ -13,6 +13,7 @@ const ec2Terraform = async (req, res) => {
       result,
     });
   } catch (error) {
+    console.log(error)
     return res.status(500).send({
       success: false,
       message: "Python script execution failed",
@@ -165,7 +166,6 @@ const goldenToInstance = async (req, res) => {
 
 const goldenToInstanceForNewCatalogue = async (req, res) => {
   const { instance_type, ami_id, storage_size, lab_id, prev_labId } = req.body;
-
   const response = await terraformService.goldenToInstanceForNewCatalogueLogic(instance_type, ami_id, storage_size, lab_id, prev_labId);
   
   if (response.success) {
@@ -213,14 +213,13 @@ const handleLaunchSoftwareOrStop = async (req, res) => {
       console.log(req.body);
 
       const response = await terraformService.handleLaunchSoftwareOrStopService(os_name, instance_id, hostname, password);
-
+      console.log(response)
       return res.status(200).send({
         success:true,
         message:"successfully executed..",
         response
       });
   } catch (error) {
-      console.error("Error:", error);
       return res.status(500).send({
           success: false,
           message: "Could not Launch or Stop software",
@@ -515,6 +514,25 @@ const restartInstance = async (req, res) => {
   }
 };
 
+//labprgress update
+const labProgress = async(req,res)=>{
+  try {
+    const response = await terraformService.labProgress();
+    return res.send({
+      success: true,
+      message: "Lab progress updated successfully",
+      data: response,
+    });
+  } catch (error) {
+    console.error("Error in lab progress:", error.message);
+    return res.status(500).send({
+      success: false,
+      message: "Error in lab progress",
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
   ec2Terraform,
   runTf,
@@ -539,4 +557,5 @@ module.exports = {
   checkLabCloudInstanceLaunched,
   stopInstance,
   restartInstance,
+  labProgress,
 };

@@ -8,8 +8,16 @@ const app = express();
 //config env variables
 require('dotenv').config();
 
+//create tables
+const tables = require('./db/tables');
+tables();
+
 //middlewares
-app.use(cors());
+//middlewares
+app.use(cors({
+    origin:'http://localhost:5173',
+    credentials:true,
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());

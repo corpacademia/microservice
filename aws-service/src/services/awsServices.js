@@ -3,6 +3,12 @@ const  awsQueries  = require('./awsQueries');
 const pool = require('../dbconfig/db');
 const path = require('path');
 
+let progress = {
+  step1: false,
+  step2: false,
+  step3: false, 
+}
+
 const executePythonScript = async (scriptName, args = []) => {
   return new Promise((resolve, reject) => {
     const pythonProcess = spawn("python", [path.resolve(__dirname,scriptName), ...args]);
@@ -10,17 +16,21 @@ const executePythonScript = async (scriptName, args = []) => {
     let errorResult = "";
 
     pythonProcess.stdout.on("data", (data) => {
+      console.log(data.toString())
       result += data.toString();
     });
 
     pythonProcess.stderr.on("data", (data) => {
+      console.log(data.toString())
       errorResult += data.toString();
     });
 
     pythonProcess.on("close", (code) => {
       if (code === 0) {
+        console.log(result.trim())
         resolve(result.trim());
       } else {
+        console.log(errorResult.trim())
         reject(errorResult.trim());
       }
     });
@@ -35,12 +45,50 @@ const executePythonScript = async (scriptName, args = []) => {
 
 // EC2 Terraform Execution
 const ec2Terraform = async (cloudPlatform) => {
-  return await executePythonScript("../terraformScripts/EC2.py");
+  try {
+    // Ensure the correct path to the script
+    const scriptPath = path.resolve(__dirname, "../terraformScripts/EC2.py");
+
+    // Execute the Python script
+    const result = await executePythonScript(scriptPath);
+
+    // Update progress only if execution is successful
+    progress.step1 = true;
+
+    return { success: true, message: "EC2 Terraform script executed successfully", result };
+  } catch (error) {
+    console.error("Error executing EC2 Terraform script:", error.message);
+
+    return {
+      success: false,
+      message: "EC2 Terraform execution failed",
+      error: error.message,
+    };
+  }
 };
 
 // Run Terraform Script
 const runTf = async (lab_id) => {
-  return await executePythonScript("../terraformScripts/terra.py", [lab_id]);
+  try {
+    // Ensure the correct path to the script
+    const scriptPath = path.resolve(__dirname, "../terraformScripts/terra.py");
+
+    // Execute the Python script with lab_id as an argument
+    const result = await executePythonScript(scriptPath, [lab_id]);
+
+    // Update progress only if execution is successful
+    progress.step2 = true;
+
+    return { success: true, message: "Terraform script executed successfully", result };
+  } catch (error) {
+    console.error("Error executing Terraform script:", error.message);
+
+    return {
+      success: false,
+      message: "Terraform execution failed",
+      error: error.message,
+    };
+  }
 };
 
 // Instance to Data Processing
@@ -167,7 +215,6 @@ const goldenToInstanceForNewCatalogueLogic = async (instanceType, amiId, storage
     console.log("Executing GoldenImageToInstanceForNewCatalogue script...");
     const scriptPath = "../terraformScripts/goldenToInstanceForNewCatalogue.py";
     const args = [instanceType, amiId, storageSize, labId, prevLabId];
-
     const result = await executePythonScript(scriptPath, args);
     
     return { success: true, message: "GoldenImageToInstanceForNewCatalogue script executed successfully", result };
@@ -260,6 +307,7 @@ const handleLaunchSoftwareOrStopService = async (osName, instanceId, hostname, p
           jwtToken,
       };
   } catch (error) {
+      console.log(error)
       throw new Error(`Could not Launch or Stop software: ${error.message}`);
   }
 };
@@ -290,16 +338,28 @@ const executeDecryptPasswordScript = (labId, publicIp, instanceId) => {
 
 const getDecryptPasswordFromCloudService = async (labId, publicIp, instanceId) => {
   try {
-      const result = await executeDecryptPasswordScript(labId, publicIp, instanceId);
-      return {
-          success: true,
-          message: "Decrypt Password script executed successfully",
-          result,
-      };
+    // Execute the decrypt password script
+    const result = await executeDecryptPasswordScript(labId, publicIp, instanceId);
+
+    // Update progress only when execution succeeds
+    progress.step3 = true;
+
+    return {
+      success: true,
+      message: "Decrypt Password script executed successfully",
+      result,
+    };
   } catch (error) {
-      throw new Error(`Could not decrypt password: ${error.message}`);
+    console.error("Error decrypting password:", error.message);
+
+    return {
+      success: false,
+      message: "Could not decrypt password",
+      error: error.message,
+    };
   }
 };
+
 
 const executeGenerateNewIpScript = (instanceId) => {
   return new Promise((resolve, reject) => {
@@ -590,7 +650,13 @@ const restartInstanceService = async (instance_id, user_type) => {
   });
 };
 
-
+const labProgress = async()=>{
+  try {
+     return progress;
+  } catch (error) {
+    throw new Error(`Lab progress error: ${error.message}`);
+  }
+}
 
 module.exports = {
   ec2Terraform,
@@ -616,4 +682,5 @@ module.exports = {
   checkLabCloudInstanceLaunchedService,
   stopInstanceService,
   restartInstanceService,
+  labProgress,
 };

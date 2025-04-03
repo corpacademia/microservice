@@ -20,7 +20,8 @@ const { createLab,
     checkIsStarted,
     createNewCatalogue,
     getOperatingSystemsFromDatabase,
-    getAssignLabOnLabId
+    getAssignLabOnLabId,
+    UpdateSingleVmLabStatus
 } = require('../controllers/labController');
 
 const router = express.Router();
@@ -48,6 +49,7 @@ router.post('/checkisstarted',checkIsStarted);
 router.post('/createCatalogue',createNewCatalogue);
 router.post('/checkvmcreated',awsConfigure);
 router.get('/getOs',getOperatingSystemsFromDatabase);
-router.post('/getAssignLabOnId',getAssignLabOnLabId)
+router.post('/getAssignLabOnId',getAssignLabOnLabId);
+router.post('/updateSingleVmStatus',UpdateSingleVmLabStatus);
 
 module.exports = router;

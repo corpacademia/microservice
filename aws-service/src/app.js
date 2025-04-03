@@ -5,6 +5,8 @@ const cookieParser = require('cookie-parser');
 const awsRoutes = require('../src/routes/awsRoutes');
 
 const app = express();
+
+
 //middlewares
 app.use(cors({
     origin: "http://localhost:5173",

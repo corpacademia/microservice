@@ -7,6 +7,10 @@ const labRouter = require('../src/routes/labRoutes');
 
 const app = express();
 
+//tables
+const tables = require('./db/labTables');
+tables();
+
 //middlewares
 app.use(express.json());
 app.use(bodyParser.json());
