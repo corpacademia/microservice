@@ -13,9 +13,9 @@ const createTables = async () => {
              createdBy UUID NOT NULL,
              services JSONB NOT NULL,
              region VARCHAR(255) NOT NULL,
-             duration INT NOT NULL,
+             startDate TIMESTAMP NOT NULL,
+             endDate TIMESTAMP NOT NULL,
              cleanupPolicy INT NOT NULL,
-             type VARCHAR(255) NOT NULL,
              platform VARCHAR(255) NOT NULL,
              provider VARCHAR(255) NOT NULL,
              title VARCHAR(255) NOT NULL,
@@ -23,6 +23,7 @@ const createTables = async () => {
              difficultyLevel INT NOT NULL,
              status VARCHAR(255) NOT NULL,
              rating INT NOT NULL,
+             modules TEXT Not NULL,
              foreign key (createdBy) references users(id) on delete cascade
             )
             `

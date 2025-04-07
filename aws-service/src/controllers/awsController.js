@@ -1,12 +1,18 @@
 const terraformService = require("../services/awsServices");
 
+//to track the progress of the lab creation process
+let progress = {
+  step1: false,
+  step2: false,
+  step3: false, 
+}
 
 // Controller: EC2 Terraform Execution
 const ec2Terraform = async (req, res) => {
   try {
     const { cloudPlatform } = req.body;
     const result = await terraformService.ec2Terraform(cloudPlatform);
-
+    progress.step1 = true; // Mark step 1 as completed
     return res.status(200).send({
       success: true,
       message: "Python script executed successfully",
@@ -28,7 +34,7 @@ const runTf = async (req, res) => {
     console.log(req.body)
     const { lab_id } = req.body;
     const result = await terraformService.runTf(lab_id);
-
+    progress.step2 = true; // Mark step 2 as completed
     return res.status(200).send({
       success: true,
       message: "Python script executed successfully",
@@ -230,20 +236,32 @@ const handleLaunchSoftwareOrStop = async (req, res) => {
 
 const getDecryptPasswordFromCloud = async (req, res) => {
   try {
-      console.log("Decrypt password request received");
-      const { lab_id, public_ip, instance_id } = req.body;
-      const response = await terraformService.getDecryptPasswordFromCloudService(lab_id, public_ip, instance_id);
+    console.log("Decrypt password request received");
 
-      return res.status(200).send(response);
+    const { lab_id, public_ip, instance_id } = req.body;
+
+    // Wait for script execution to complete before updating progress
+    const response = await terraformService.getDecryptPasswordFromCloudService(lab_id, public_ip, instance_id);
+
+    if (response.success) {
+      progress.step3 = true; // Mark step 3 as completed **only when execution is successful**
+      console.log("Decryption successful, progress updated:", progress);
+    } else {
+      console.error("Decryption failed, progress not updated.");
+    }
+
+    return res.status(200).send(response);
   } catch (error) {
-      console.error("Error:", error);
-      return res.status(500).send({
-          success: false,
-          message: "Error decrypting password",
-          error: error.message,
-      });
+    console.error("Error:", error);
+
+    return res.status(500).send({
+      success: false,
+      message: "Error decrypting password",
+      error: error.message,
+    });
   }
 };
+
 
 const getNewIpFromCloud = async (req, res) => {
   try {
@@ -517,11 +535,10 @@ const restartInstance = async (req, res) => {
 //labprgress update
 const labProgress = async(req,res)=>{
   try {
-    const response = await terraformService.labProgress();
     return res.send({
       success: true,
       message: "Lab progress updated successfully",
-      data: response,
+      data: progress,
     });
   } catch (error) {
     console.error("Error in lab progress:", error.message);

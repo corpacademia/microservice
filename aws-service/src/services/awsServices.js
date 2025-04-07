@@ -3,11 +3,7 @@ const  awsQueries  = require('./awsQueries');
 const pool = require('../dbconfig/db');
 const path = require('path');
 
-let progress = {
-  step1: false,
-  step2: false,
-  step3: false, 
-}
+
 
 const executePythonScript = async (scriptName, args = []) => {
   return new Promise((resolve, reject) => {
@@ -52,8 +48,6 @@ const ec2Terraform = async (cloudPlatform) => {
     // Execute the Python script
     const result = await executePythonScript(scriptPath);
 
-    // Update progress only if execution is successful
-    progress.step1 = true;
 
     return { success: true, message: "EC2 Terraform script executed successfully", result };
   } catch (error) {
@@ -76,8 +70,6 @@ const runTf = async (lab_id) => {
     // Execute the Python script with lab_id as an argument
     const result = await executePythonScript(scriptPath, [lab_id]);
 
-    // Update progress only if execution is successful
-    progress.step2 = true;
 
     return { success: true, message: "Terraform script executed successfully", result };
   } catch (error) {
@@ -312,26 +304,38 @@ const handleLaunchSoftwareOrStopService = async (osName, instanceId, hostname, p
   }
 };
 const executeDecryptPasswordScript = (labId, publicIp, instanceId) => {
-  const scriptPath = path.resolve(__dirname,"../terraformScripts/decrypt_password.py");
-  const args = [labId, publicIp, instanceId];
+  return new Promise((resolve, reject) => {
+    const scriptPath = path.resolve(__dirname, "../terraformScripts/decrypt_password.py");
+    const args = [labId, publicIp, instanceId];
 
-  console.log(path.resolve(__dirname,scriptPath))
-  const pythonProcess = spawn("python", [path.resolve(__dirname, scriptPath), ...args]);
+    const pythonProcess = spawn("python", [scriptPath, ...args]);
 
-  pythonProcess.stdout.on("data", (data) => {
-      console.log("Decrypted Password:", data.toString().trim());
-  });
+    let outputData = "";
+    let errorData = "";
 
-  pythonProcess.stderr.on("data", (data) => {
-      console.error("Decrypt Password script error:", data.toString().trim());
-  });
+    pythonProcess.stdout.on("data", (data) => {
+      outputData += data.toString();
+      console.log("Decrypted Password:", outputData.trim());
+    });
 
-  pythonProcess.on("close", (code) => {
+    pythonProcess.stderr.on("data", (data) => {
+      errorData += data.toString();
+      console.error("Decrypt Password script error:", errorData.trim());
+    });
+
+    pythonProcess.on("close", (code) => {
       console.log(`Decrypt Password script exited with code ${code}`);
-  });
+      if (code === 0) {
+        resolve(outputData.trim()); // Resolves when script execution succeeds
+      } else {
+        reject(new Error(`Script exited with code ${code}: ${errorData.trim()}`));
+      }
+    });
 
-  pythonProcess.on("error", (err) => {
+    pythonProcess.on("error", (err) => {
       console.error(`Failed to start Decrypt Password script: ${err.message}`);
+      reject(err);
+    });
   });
 };
 
@@ -340,10 +344,6 @@ const getDecryptPasswordFromCloudService = async (labId, publicIp, instanceId) =
   try {
     // Execute the decrypt password script
     const result = await executeDecryptPasswordScript(labId, publicIp, instanceId);
-
-    // Update progress only when execution succeeds
-    progress.step3 = true;
-
     return {
       success: true,
       message: "Decrypt Password script executed successfully",
@@ -650,13 +650,13 @@ const restartInstanceService = async (instance_id, user_type) => {
   });
 };
 
-const labProgress = async()=>{
-  try {
-     return progress;
-  } catch (error) {
-    throw new Error(`Lab progress error: ${error.message}`);
-  }
-}
+// const labProgress = async()=>{
+//   try {
+//      return progress;
+//   } catch (error) {
+//     throw new Error(`Lab progress error: ${error.message}`);
+//   }
+// }
 
 module.exports = {
   ec2Terraform,
@@ -682,5 +682,4 @@ module.exports = {
   checkLabCloudInstanceLaunchedService,
   stopInstanceService,
   restartInstanceService,
-  labProgress,
 };

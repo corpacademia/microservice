@@ -25,6 +25,41 @@ const getAllAwsServices = async(req,res)=>{
     }
 }
 
+//create cloud slice lab
+const createCloudSliceLab = async(req,res)=>{
+    try {
+        const {createdBy,labData} = req.body;
+        if(!labData){
+            return res.status(400).send({
+                success:false,
+                message:"Please provide lab data"
+            })
+        }
+        const result = await clouSliceAwsService.createCloudSliceLab(createdBy,labData);
+        if(!result){
+            return res.status(400).send({
+                success:false,
+                message:"Failed to create cloud slice lab"
+            })
+        }
+        return res.status(201).send({
+            success:true,
+            message:"Successfully created cloud slice lab",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+    }
+    
+
+}
+
 module.exports = {
     getAllAwsServices,
+    createCloudSliceLab,
 }
