@@ -1,3 +1,4 @@
+const { json } = require('body-parser');
 const clouSliceAwsService = require('../services/cloudSliceAwsService');
 
 const getAllAwsServices = async(req,res)=>{
@@ -59,7 +60,32 @@ const createCloudSliceLab = async(req,res)=>{
 
 }
 
+const createCloudSliceLabWithModules = async(req,res)=>{
+    try {
+        const labData = JSON.parse(req.body.data);
+    const files = req.files.map(file=>file.path);
+    console.log(files)
+    const filesArray = files.length > 0 ? files : null;
+    const createLab = await clouSliceAwsService.createCloudSliceLabWithModules(labData,filesArray);
+    
+    return res.status(201).send({
+        success:true,
+        message:"Successfully created cloud slice lab with modules",
+        data:createLab
+    })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+        
+    }
+    }
+
 module.exports = {
     getAllAwsServices,
     createCloudSliceLab,
+    createCloudSliceLabWithModules,
 }

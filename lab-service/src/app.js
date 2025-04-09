@@ -9,7 +9,7 @@ const app = express();
 
 //tables
 const tables = require('./db/labTables');
-tables();
+tables;
 
 //middlewares
 app.use(express.json());

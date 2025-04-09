@@ -32,3 +32,5 @@ const createTables = async()=>{
 }
 
 createTables();
+
+module.exports = createTables;

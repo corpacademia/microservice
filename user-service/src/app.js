@@ -7,7 +7,7 @@ const authRouter = require('./routes/authRoutes')
 const app = express();
 
 //tables
-const tables =  require('./dbconfig/userTables');
+const tables = require('./dbconfig/userTables');
 tables;
 
 app.use(express.json());

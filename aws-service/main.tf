@@ -13,7 +13,7 @@ provider "aws" {
 }
 
 resource "aws_instance" "app" {
-  ami           = "ami-08ba6af047887fb2d"
+  ami           = "ami-02cfd6cf1ddd456b5"
   instance_type = "t3.small"
 
   user_data = <<-EOF
@@ -24,7 +24,7 @@ resource "aws_instance" "app" {
               EOF
 
   tags = {
-    Name = "Corpacademia_18c9e213-18e0-448c-b108-9783a17f3acd"
+    Name = "A1_34c17183-06ed-46d0-b1f8-49caef71ed1e"
   }
 }
 

@@ -9,7 +9,7 @@ const organizationRouter = require('./routes/organizationRoutes');
 
 //tables
 const tables = require('./db/organizationTables');
-tables();   
+tables;   
 
 //middlewares
 app.use(cors({
