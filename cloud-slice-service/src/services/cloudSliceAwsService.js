@@ -123,13 +123,67 @@ const createCloudSliceLabWithModules = async (labData,filesArray) => {
     }
 }
 
+const getCloudSliceLabsByCreatedUser = async(userId)=>{
+    try {
+        const result = await pool.query(cloudSliceAwsQueries.GET_ALL_LABS_ON_CREATED_USER,[userId]);
+      
+        return result.rows;
+    } catch (error) {
+        console.log(error);
+        throw new Error('Error in getCloudSliceLabs function', error);
+    }
+}
 
+//fetch cloudslice lab by id
+const getCloudSliceLabById = async(labId)=>{
+    try {
+        const result = await pool.query(cloudSliceAwsQueries.GET_LABS_ON_ID,[labId]);
+        if (!result.rows.length) {
+            throw new Error('No lab found with this id');
+        }
+        return result.rows[0];
+    } catch (error) {
+        console.log(error);
+        throw new Error('Error in getCloudSliceLabById function', error);
+    }
+}
 
+//update the services on lab id
+const updateServicesOnLabId = async(labId,services)=>{
+    try {
+        const result = await pool.query(cloudSliceAwsQueries.UPDATE_SERVICES_ON_LABID,[JSON.stringify(services),labId]);
+        if (!result.rows.length) {
+            throw new Error('No lab found with this id');
+        }
+        return result.rows[0];
+    } catch (error) {
+        console.log(error);
+        throw new Error('Error in updateServicesOnLabId function', error);
+    }
+}
+
+//GET MODULES ON LABID
+const getModulesOnLabId = async(labId)=>{
+    try {
+        const result = await pool.query(cloudSliceAwsQueries.GET_MODULES_ON_LABID,[labId]);
+        if (!result.rows.length) {
+            throw new Error('No lab found with this id');
+        }
+        return result.rows[0];
+    } catch (error) {
+        console.log(error);
+        throw new Error('Error in getModulesOnLabId function', error);
+    }
+}
 
 
 module.exports = {
     getAllAwsServices,
     createCloudSliceLab,
     createCloudSliceLabWithModules,
+    getCloudSliceLabsByCreatedUser,
+    getCloudSliceLabById,
+    updateServicesOnLabId,
+    getModulesOnLabId,
 }
 

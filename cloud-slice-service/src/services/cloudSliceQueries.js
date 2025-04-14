@@ -6,4 +6,8 @@ module.exports = {
     INSERT_LAB_EXERCISES:`INSERT INTO lab_exercises(exercise_id,estimated_duration,instructions,services,files,title) VALUES($1,$2,$3,$4,$5,$6) RETURNING *`,
     INSERT_QUIZ_QUESTIONS:`INSERT INTO questions(exercise_id,question_text,description,correct_answer) VALUES($1,$2,$3,$4) RETURNING *`,
     INSERT_QUIZ_OPTIONS:`INSERT INTO options(question_id,option_text,option_id) VALUES($1,$2,$3) RETURNING *`,
+    GET_ALL_LABS_ON_CREATED_USER:`SELECT * FROM cloudslicelab where createdby = $1`,
+    GET_LABS_ON_ID:`SELECT * FROM cloudslicelab where labid = $1`,
+    UPDATE_SERVICES_ON_LABID:`UPDATE cloudslicelab SET services = $1 WHERE labid = $2 RETURNING *`,
+    GET_MODULES_ON_LABID:`SELECT * FROM modules WHERE lab_id = $1`,
 }

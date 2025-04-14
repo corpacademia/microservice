@@ -84,8 +84,147 @@ const createCloudSliceLabWithModules = async(req,res)=>{
     }
     }
 
+    const getCloudSliceLabByCreatedUserId = async(req,res)=>{
+        try {
+            const userId = req.query.userId;
+            if(!userId){
+                return res.status(400).send({
+                    success:false,
+                    message:"Please provide user id"
+                })
+            }
+            const result = await clouSliceAwsService.getCloudSliceLabsByCreatedUser(userId);
+            if(!result.length){
+                return res.status(404).send({
+                    success:false,
+                    message:"No cloud slice labs found"
+                })
+            }
+            return res.status(200).send({
+                success:true,
+                message:"Successfully fetched all cloud slice labs",
+                data:result
+            })
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send({
+                success:false,
+                message:"Internal server error",
+                error:error.message
+            })
+        }
+    }
+
+// get cloud slice lab by id
+const getCloudSliceLabById = async(req,res)=>{
+    try {
+        const {labId} = req.params;
+        console.log(labId)
+        if(!labId){
+            return res.status(400).send({
+                success:false,
+                message:"Please provide lab id"
+            })
+        }
+        const result = await clouSliceAwsService.getCloudSliceLabById(labId);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No cloud slice lab found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully fetched cloud slice lab",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+    }
+}
+
+//update the services on lab id
+const updateServicesOnLabId = async(req,res)=>{
+    const {labId} = req.params;
+    const {services} = req.body;
+    if(!labId){
+        return res.status(400).send({
+            success:false,
+            message:"Please provide lab id"
+        })
+    }
+    if(!services){
+        return res.status(400).send({
+            success:false,
+            message:"Please provide services"
+        })
+    }
+    try {
+        const result = await clouSliceAwsService.updateServicesOnLabId(labId,services);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No cloud slice lab found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully updated services on cloud slice lab",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+    }
+}
+
+//get modules on lab id
+const getModulesOnLabId = async(req,res)=>{
+    const {labId} = req.params;
+    if(!labId){
+        return res.status(400).send({
+            success:false,
+            message:"Please provide lab id"
+        })
+    }
+    try {
+        const result = await clouSliceAwsService.getModulesOnLabId(labId);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No modules found with this lab id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully fetched modules on cloud slice lab",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+    }
+}
+
 module.exports = {
     getAllAwsServices,
     createCloudSliceLab,
     createCloudSliceLabWithModules,
+    getCloudSliceLabByCreatedUserId,
+    getCloudSliceLabById,
+    updateServicesOnLabId,
+    getModulesOnLabId,
 }
