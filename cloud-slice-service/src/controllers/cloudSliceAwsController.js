@@ -64,7 +64,6 @@ const createCloudSliceLabWithModules = async(req,res)=>{
     try {
         const labData = JSON.parse(req.body.data);
     const files = req.files.map(file=>file.path);
-    console.log(files)
     const filesArray = files.length > 0 ? files : null;
     const createLab = await clouSliceAwsService.createCloudSliceLabWithModules(labData,filesArray);
     

@@ -95,7 +95,7 @@ const createCloudSliceLabWithModules = async (labData,filesArray) => {
                     if (!title || !description || !correctAnswer) {
                         throw new Error('Please provide all required fields in questions');
                     }
-                    const question_result = await pool.query(cloudSliceAwsQueries.INSERT_QUIZ_QUESTIONS,[exerciseId,title,description,correctAnswer]);
+                    const question_result = await pool.query(cloudSliceAwsQueries.INSERT_QUIZ_QUESTIONS,[exerciseId,title,description,correctAnswer,exercise.duration,exercise.title]);
                     const questionId = question_result.rows[0].id;
                     if (!questionId) {
                         throw new Error('Question creation failed');
