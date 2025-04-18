@@ -218,6 +218,38 @@ const getModulesOnLabId = async(req,res)=>{
     }
 }
 
+//get lab exercises on module id
+const getLabExercisesOnModuleId = async(req,res)=>{
+    const {moduleId} = req.params;
+    if(!moduleId){
+        return res.status(400).send({
+            success:false,
+            message:"Please provide module id"
+        })
+    }
+    try {
+        const result = await clouSliceAwsService.getLabExercisesOnModuleId(moduleId);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No lab exercises found with this module id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully fetched lab exercises on module",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+    }
+}
+
 module.exports = {
     getAllAwsServices,
     createCloudSliceLab,
@@ -226,4 +258,5 @@ module.exports = {
     getCloudSliceLabById,
     updateServicesOnLabId,
     getModulesOnLabId,
+    getLabExercisesOnModuleId,
 }

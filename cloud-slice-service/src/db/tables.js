@@ -15,7 +15,7 @@ const createTables = async () => {
              region VARCHAR(255) NOT NULL,
              startDate TIMESTAMP NOT NULL,
              endDate TIMESTAMP NOT NULL,
-             cleanupPolicy INT NOT NULL,
+             cleanupPolicy INT ,
              platform VARCHAR(255) NOT NULL,
              provider VARCHAR(255) NOT NULL,
              title VARCHAR(255) NOT NULL,
@@ -24,6 +24,7 @@ const createTables = async () => {
              status VARCHAR(255) NOT NULL,
              rating INT NOT NULL,
              modules TEXT Not NULL,
+             credits INT,
              foreign key (createdBy) references users(id) on delete cascade
             )
             `
@@ -74,7 +75,8 @@ const createTables = async () => {
     title VARCHAR(255) NOT NULL,
     instructions TEXT,
 	services TEXT[],
-	files TEXT[] 
+	files TEXT[] ,
+    cleanuppolicy JSONB
 );`)
 
 // -- QUIZ QUESTIONS TABLE
@@ -84,7 +86,9 @@ const createTables = async () => {
     title VARCHAR(255) NOT NULL,
     question_text TEXT NOT NULL,
 	description TEXT,
-	correct_answet TEXT
+	correct_answet TEXT,
+    title TEXT,
+    estimated_duration INT
 );
 `)
 

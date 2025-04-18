@@ -31,14 +31,14 @@ const getAllAwsServices = async () => {
 };
 
 const createCloudSliceLab = async (createdBy,labData) => {
-    const { services, region, startDate, endDate, cleanupPolicy, platform, cloudProvider, title, description, labType } = labData;
+    const { services, region, startDate, endDate, cleanupPolicy, platform, cloudProvider, title, description, labType, credits } = labData;
    
     if (!services || !region || !startDate || !endDate || !cleanupPolicy  || !platform || !cloudProvider || !title || !description || !labType ) {
         throw new Error('Please provide all required fields');
     }
      try {
         const result = await pool.query(cloudSliceAwsQueries.INSERT_LAB_DATA,
-            [createdBy,JSON.stringify(services), region, startDate, endDate, cleanupPolicy, platform, cloudProvider, title, description, labType]);
+            [createdBy,JSON.stringify(services), region, startDate, endDate, cleanupPolicy, platform, cloudProvider, title, description, labType, credits]);
         return result.rows[0];
     } catch (error) {
         console.log(error);
@@ -53,12 +53,14 @@ const createCloudSliceLabWithModules = async (labData,filesArray) => {
         if (!createdBy || !labConfig || !modules) {
             throw new Error('Please provide all required fields');
         }
-        const {cleanupPolicy,cloudProvider,description,endDate,labType,platform,region,services,startDate,title} = labConfig;
+        const {cloudProvider,description,endDate,labType,platform,region,services,startDate,title} = labConfig;
+        console.log('labConfig',labConfig);
 
-        if (!cleanupPolicy || !cloudProvider || !description || !endDate || !labType || !platform || !region  || !startDate || !title) {
+        if ( !cloudProvider || !description || !endDate || !labType || !platform || !region  || !startDate || !title) {
             throw new Error('Please provide all required fields in labConfig');
         }
-        const lab = await pool.query(cloudSliceAwsQueries.INSERT_LAB_DATA,[createdBy,JSON.stringify(services),region,startDate,endDate,cleanupPolicy,platform,cloudProvider,title,description,labType]);
+        const lab = await pool.query(cloudSliceAwsQueries.INSERT_LAB_DATA_WITH_MODULES,[createdBy,JSON.stringify(services),region,startDate,endDate,platform,cloudProvider,title,description,labType]);
+        console.log(lab.rows[0]);
         const labId = lab.rows[0].labid;
         if (!labId) {
             throw new Error('Lab creation failed');
@@ -81,12 +83,11 @@ const createCloudSliceLabWithModules = async (labData,filesArray) => {
                     throw new Error('Exercise creation failed');
                 }
                 if(exercise.type === 'lab'){
-                    const {title,duration,instructions,services,files} = exercise.labExercise;
-                    console.log('labExercise', exercise.labExercise)
+                    const {title,duration,instructions,services,files,cleanupPolicy} = exercise.labExercise;
                     if (!duration || !instructions || !services || !files) {
                         throw new Error('Please provide all required fields in lab exercises');
                     }
-                    const labExercise = await pool.query(cloudSliceAwsQueries.INSERT_LAB_EXERCISES,[exerciseId,duration,instructions,services,getMatchingFilePaths(filesArray,files),title]);
+                    const labExercise = await pool.query(cloudSliceAwsQueries.INSERT_LAB_EXERCISES,[exerciseId,duration,instructions,services,getMatchingFilePaths(filesArray,files),title,cleanupPolicy]);
                 
             }
             if(exercise.type === 'questions'){
@@ -176,6 +177,18 @@ const getModulesOnLabId = async(labId)=>{
     }
 }
 
+const getLabExercisesOnModuleId = async(moduleId)=>{
+    try {
+        const result = await pool.query(cloudSliceAwsQueries.GET_LAB_EXERCISES_ON_MODULEID,[moduleId]);
+        if (!result.rows.length) {
+            throw new Error('No lab found with this id');
+        }
+        return result.rows;
+    } catch (error) {
+        console.log(error);
+        throw new Error('Error in getLabExercisesOnModuleId function', error);
+    }
+}
 
 module.exports = {
     getAllAwsServices,
@@ -185,5 +198,6 @@ module.exports = {
     getCloudSliceLabById,
     updateServicesOnLabId,
     getModulesOnLabId,
+    getLabExercisesOnModuleId
 }
 

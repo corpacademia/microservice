@@ -28,6 +28,7 @@ const {
     getCloudSliceLabById,
     updateServicesOnLabId,
     getModulesOnLabId,
+    getLabExercisesOnModuleId,
 } = require('../controllers/cloudSliceAwsController')
 
 router.get('/getAwsServices',getAllAwsServices);
@@ -37,6 +38,7 @@ router.get('/getCloudSlices',getCloudSliceLabByCreatedUserId);
 router.post('/getCloudSliceDetails/:labId',getCloudSliceLabById);
 router.post('/updateCloudSliceServices/:labId',updateServicesOnLabId);
 router.get('/getModules/:labId',getModulesOnLabId);
+router.get('/lab-exercises/:moduleId',getLabExercisesOnModuleId);
 
 
 module.exports = router;
