@@ -8,7 +8,7 @@ SECRET_KEY = "4F9p2cINEx9vGnRkJVITMhJcZotzL0znSmiGEr4VXBQ="
 
 # AWS Configuration
 AWS_REGION = "us-east-1b"
-PRIVATE_KEY_PATH = "C:/Users/Administrator/Downloads/Aws2.pem"
+PRIVATE_KEY_PATH = "C:/Users/Admin/Downloads/Aws2.pem"
 
 # Initialize AWS EC2 client
 ec2_client = boto3.client("ec2", region_name=AWS_REGION)

@@ -250,6 +250,89 @@ const getLabExercisesOnModuleId = async(req,res)=>{
     }
 }
 
+
+// MODULES
+const getAllModules = async (req, res) => {
+    try {
+      const modules = await clouSliceAwsService.getAllModules();
+      for (const mod of modules) {
+        const exercises = await clouSliceAwsService.getExercisesByModuleId(mod.id);
+        mod.exercises = exercises;
+      }
+      if(!modules.length) {
+        return res.status(404).send({
+          success: false,
+          message: "No modules found"
+        });
+      }
+      return res.status(200).send({
+        success: true,
+        message: "Modules fetched successfully",
+        data: modules
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message
+      });
+    }
+  };
+  
+  // LAB EXERCISES
+  const getLabExercises = async (req, res) => {
+    const { moduleId } = req.params;
+    try {
+      const result = await clouSliceAwsService.getLabExercisesByModuleId(moduleId);
+      if(!result.length) {
+        return res.status(404).send({
+          success: false,
+          message: "No lab exercises found for this module"
+        });
+      }
+      return res.status(200).send({
+        success: true,
+        message: "Lab exercises fetched successfully",
+        data: result
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message
+      });
+    }
+  };
+  
+  // QUIZ EXERCISES
+  const getQuizExercises = async (req, res) => {
+    const { moduleId } = req.params;
+    try {
+      const result = await clouSliceAwsService.getQuizExercisesByModuleId(moduleId);
+      if(!result.length) {
+        return res.status(404).send({
+          success: false,
+          message: "No quiz exercises found for this module"
+        });
+      }
+      return res.status(200).send({
+        success: true,
+        message: "Quiz exercises fetched successfully",
+        data: result
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message
+      });
+    }
+  };
+  
+
 module.exports = {
     getAllAwsServices,
     createCloudSliceLab,
@@ -259,4 +342,7 @@ module.exports = {
     updateServicesOnLabId,
     getModulesOnLabId,
     getLabExercisesOnModuleId,
+    getAllModules,
+  getLabExercises,
+  getQuizExercises
 }

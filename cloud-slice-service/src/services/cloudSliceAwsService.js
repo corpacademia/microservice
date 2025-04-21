@@ -50,17 +50,17 @@ const createCloudSliceLab = async (createdBy,labData) => {
 const createCloudSliceLabWithModules = async (labData,filesArray) => {
     try {
         const {createdBy,labConfig,modules} = labData;
+        console.log('modules',modules);
         if (!createdBy || !labConfig || !modules) {
             throw new Error('Please provide all required fields');
         }
         const {cloudProvider,description,endDate,labType,platform,region,services,startDate,title} = labConfig;
-        console.log('labConfig',labConfig);
 
         if ( !cloudProvider || !description || !endDate || !labType || !platform || !region  || !startDate || !title) {
             throw new Error('Please provide all required fields in labConfig');
         }
         const lab = await pool.query(cloudSliceAwsQueries.INSERT_LAB_DATA_WITH_MODULES,[createdBy,JSON.stringify(services),region,startDate,endDate,platform,cloudProvider,title,description,labType]);
-        console.log(lab.rows[0]);
+     
         const labId = lab.rows[0].labid;
         if (!labId) {
             throw new Error('Lab creation failed');
@@ -103,10 +103,14 @@ const createCloudSliceLabWithModules = async (labData,filesArray) => {
                     }
                     for(option of question.options){
                         const {id , text} = option;
+                        let is_correct=false;
+                        if(question.correctAnswer === id){
+                            is_correct = true;
+                        }
                         if (!id || !text) {
                             throw new Error('Please provide all required fields in options');
                         }
-                        const option_result = await pool.query(cloudSliceAwsQueries.INSERT_QUIZ_OPTIONS,[questionId,text,id]);
+                        const option_result = await pool.query(cloudSliceAwsQueries.INSERT_QUIZ_OPTIONS,[questionId,text,id,is_correct]);
                         if (!option_result) {
                             throw new Error('Option creation failed');
                         }
@@ -190,6 +194,44 @@ const getLabExercisesOnModuleId = async(moduleId)=>{
     }
 }
 
+// MODULES
+const getAllModules = async () => {
+    const result = await pool.query(cloudSliceAwsQueries.GET_ALL_MODULES);
+    if (!result.rows.length) throw new Error('No modules found');
+    return result.rows;
+  };
+  
+  const getExercisesByModuleId = async (moduleId) => {
+    const result = await pool.query(cloudSliceAwsQueries.GET_MODULE_EXERCISES, [moduleId]);
+    return result.rows;
+  };
+  
+  // LABS
+  const getLabExercisesByModuleId = async (moduleId) => {
+    const result = await pool.query(cloudSliceAwsQueries.GET_LAB_EXERCISES_BY_MODULE, [moduleId]);
+    return result.rows;
+  };
+  
+  // QUIZZES
+  const getQuizExercisesByModuleId = async (moduleId) => {
+    const { rows: exercises } = await pool.query(cloudSliceAwsQueries.GET_QUIZ_EXERCISES_IDS_BY_MODULE, [moduleId]);
+    const quizData = [];
+  
+    for (const ex of exercises) {
+      const { rows: questions } = await pool.query(cloudSliceAwsQueries.GET_QUESTIONS_BY_EXERCISE_ID, [ex.exercise_id]);
+  
+      for (const q of questions) {
+        const { rows: options } = await pool.query(cloudSliceAwsQueries.GET_OPTIONS_BY_QUESTION_ID, [q.id]);
+        q.options = options;
+      }
+      quizData.push({
+        exerciseId: ex.exercise_id,
+        questions
+      });
+    }
+    return quizData;
+  };
+
 module.exports = {
     getAllAwsServices,
     createCloudSliceLab,
@@ -198,6 +240,10 @@ module.exports = {
     getCloudSliceLabById,
     updateServicesOnLabId,
     getModulesOnLabId,
-    getLabExercisesOnModuleId
+    getLabExercisesOnModuleId,
+    getAllModules,
+  getExercisesByModuleId,
+  getLabExercisesByModuleId,
+  getQuizExercisesByModuleId
 }
 
