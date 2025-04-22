@@ -254,7 +254,8 @@ const getLabExercisesOnModuleId = async(req,res)=>{
 // MODULES
 const getAllModules = async (req, res) => {
     try {
-      const modules = await clouSliceAwsService.getAllModules();
+        const { sliceId } = req.params;
+      const modules = await clouSliceAwsService.getAllModules(sliceId);
       for (const mod of modules) {
         const exercises = await clouSliceAwsService.getExercisesByModuleId(mod.id);
         mod.exercises = exercises;
@@ -332,6 +333,205 @@ const getAllModules = async (req, res) => {
     }
   };
   
+//update module on id
+const updateModuleOnId = async(req,res)=>{
+    try {
+        const moduleData =  req.body;
+        if(!moduleData) {
+            return res.status(400).send({
+                success:false,
+                message:"Please provide module data"
+            })
+        }
+        const result = await clouSliceAwsService.updateModuleOnId(moduleData);
+        if (!result ) {
+            return res.status(404).send({
+                success: false,
+                message: "No module found with this id"
+            });
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully updated module",
+            data:result
+        })  
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+        
+    }
+}
+
+//delete module on id
+const deleteModuleOnId = async(req,res)=>{
+    try {
+        const {moduleId} = req.params;
+        if(!moduleId){
+            return res.status(400).send({
+                success:false,
+                message:"Please provide module id"
+            })
+        }
+        const result = await clouSliceAwsService.deleteModuleOnId(moduleId);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No module found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully deleted module",
+            data:result
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+        
+    }
+}
+
+//update exercise main content on id
+const updateExerciseMainContentOnId = async(req,res)=>{
+    try {
+        const  moduleData  = req.body;
+
+        if(!moduleData) {
+            return res.status(400).send({
+                success:false,
+                message:"Please provide module data"
+            })
+        }
+        const result = await clouSliceAwsService.updateExerciseMainContentOnId(moduleData);
+        if (!result ) {
+            return res.status(404).send({
+                success: false,
+                message: "No module found with this id"
+            });
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully updated module",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+        
+    }
+}
+
+//delete exercise on id
+const deleteExerciseOnId = async(req,res)=>{  
+    try {
+        const exerciseId = req.params.exerciseId;
+        if(!exerciseId){
+            return res.status(400).send({
+                success:false,
+                message:"Please provide exercise id"
+            })
+        }
+        const result = await clouSliceAwsService.deleteExerciseOnId(exerciseId);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No exercise found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully deleted exercise",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+    }
+  }
+
+  //update lab_exercise on exercise id
+  const updateLabExerciseOnExerciseId = async(req,res)=>{
+    try {
+        const exerciseData = req.body;
+        if(!exerciseData){
+            return res.status(400).send({
+                success:false,
+                message:"Please provide exercise data"
+            })
+        }
+        const result = await clouSliceAwsService.updateLabExerciseContentOnExerciseId(exerciseData);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No exercise found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully updated exercise",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+    }
+  }
+
+//update quiz exercise on exercise id
+const updateQuizExerciseOnExerciseId = async(req,res)=>{
+    try {
+        const exerciseData = req.body;
+        if(!exerciseData){
+            return res.status(400).send({
+                success:false,
+                message:"Please provide exercise data"
+            })
+        }
+        const result = await clouSliceAwsService.updateQuizExerciseContentOnExerciseId(exerciseData);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No exercise found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully updated exercise",
+            data:result
+        })
+
+
+    } catch (error) {
+        console.log(error);     
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+
+    }
+}
 
 module.exports = {
     getAllAwsServices,
@@ -344,5 +544,11 @@ module.exports = {
     getLabExercisesOnModuleId,
     getAllModules,
   getLabExercises,
-  getQuizExercises
+  getQuizExercises,
+  updateModuleOnId,
+  deleteModuleOnId,
+  updateExerciseMainContentOnId,
+  deleteExerciseOnId,
+  updateLabExerciseOnExerciseId,
+  updateQuizExerciseOnExerciseId,
 }

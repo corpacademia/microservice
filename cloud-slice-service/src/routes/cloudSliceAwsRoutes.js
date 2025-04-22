@@ -31,7 +31,13 @@ const {
     getLabExercisesOnModuleId,
     getAllModules,
   getLabExercises,
-  getQuizExercises
+  getQuizExercises,
+  updateModuleOnId,
+  deleteModuleOnId,
+  updateExerciseMainContentOnId,
+  deleteExerciseOnId,
+  updateLabExerciseOnExerciseId,
+  updateQuizExerciseOnExerciseId
 } = require('../controllers/cloudSliceAwsController')
 
 router.get('/getAwsServices',getAllAwsServices);
@@ -44,6 +50,12 @@ router.post('/updateCloudSliceServices/:labId',updateServicesOnLabId);
 router.get('/getModules/:sliceId', getAllModules);
 router.get('/lab-exercises/:moduleId', getLabExercises);
 router.get('/quiz-exercises/:moduleId', getQuizExercises);
+router.put('/updateModule', updateModuleOnId);
+router.delete('/deleteModule/:moduleId', deleteModuleOnId) ;
+router.put('/updateExercise',updateExerciseMainContentOnId);
+router.delete('/deleteExercise/:exerciseId', deleteExerciseOnId);
+router.put('/updateLabExercise',updateLabExerciseOnExerciseId);
+router.put('/updateQuizExercise',updateQuizExerciseOnExerciseId);
 
 
 module.exports = router;
