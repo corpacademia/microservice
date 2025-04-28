@@ -70,4 +70,15 @@ CREATE_CATALOGUE: `
     GET_OPERATING_SYSTEMS: 'SELECT * FROM operating_systems',
     GET_ASSIGNED_LABS_ON_LABID:"SELECT * from labassignments where lab_id=$1 and user_id=$2",
 UPDATE_LAB_STATUS: `UPDATE createlab SET status=$1 WHERE lab_id=$2 RETURNING *`,
+
+GET_COUNT:`SELECT json_object_agg(table_name, row_count) AS counts
+FROM (
+  SELECT 'workspace' AS table_name, COUNT(*) AS row_count FROM workspace where created_by=$1
+  UNION ALL
+  SELECT 'cloud-vm', COUNT(*) FROM createlab where user_id=$1
+  UNION ALL
+  SELECT 'cloud-slice', COUNT(*) FROM cloudslicelab where createdby=$1
+ 
+) AS subquery;
+`
 }

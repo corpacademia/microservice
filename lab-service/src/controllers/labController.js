@@ -602,6 +602,37 @@ const UpdateSingleVmLabStatus = async(req,res)=>{
     }
 }
 
+//get count of labs
+const getCount = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        if (!userId) {  
+            return res.status(400).send({
+                success: false,
+                message: "User ID is required",
+            });
+        }
+        const result = await labService.getCount(userId);
+        if(!result) {
+            return res.status(404).send({
+                success: false,
+                message: "No data found",
+            });
+        }
+        return res.status(200).send({
+            success: true,
+            message: "Successfully retrieved the count",
+            data: result,
+        });
+    } catch (error) {
+        return res.status(500).send({
+            success: false,
+            message: "Error in getting the count",
+            error: error.message,
+        });
+    }
+};
+
 module.exports = {
     createLab,
     getAllLab,
@@ -627,4 +658,5 @@ module.exports = {
     getOperatingSystemsFromDatabase,
     getAssignLabOnLabId,
     UpdateSingleVmLabStatus,
+    getCount,
 }

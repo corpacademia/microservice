@@ -390,7 +390,16 @@ const getLabCatalogues = async () => {
      }
  }
 
-
+//get count of labs
+const getCount = async (userId) => {
+    try {
+        const result = await pool.query(queries.GET_COUNT,[userId]);
+        return result.rows[0]; // Return the count of labs
+    } catch (error) {
+        console.error("Error in getCount service:", error.message);
+        throw error;
+    }
+};
 
 module.exports = {
     createLab,
@@ -420,4 +429,5 @@ module.exports = {
     getOperatingSystems,
     getAssignLabOnLabId,
     updateSigleVmLabStatus,
+    getCount,
 }

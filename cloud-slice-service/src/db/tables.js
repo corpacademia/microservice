@@ -25,6 +25,7 @@ const createTables = async () => {
              rating INT NOT NULL,
              modules TEXT Not NULL,
              credits INT,
+             accounttype TEXT NOT NULL,
              foreign key (createdBy) references users(id) on delete cascade
             )
             `

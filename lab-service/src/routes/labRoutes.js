@@ -21,7 +21,8 @@ const { createLab,
     createNewCatalogue,
     getOperatingSystemsFromDatabase,
     getAssignLabOnLabId,
-    UpdateSingleVmLabStatus
+    UpdateSingleVmLabStatus,
+    getCount
 } = require('../controllers/labController');
 
 const router = express.Router();
@@ -51,5 +52,6 @@ router.post('/checkvmcreated',awsConfigure);
 router.get('/getOs',getOperatingSystemsFromDatabase);
 router.post('/getAssignLabOnId',getAssignLabOnLabId);
 router.post('/updateSingleVmStatus',UpdateSingleVmLabStatus);
+router.get('/getCountoflabs/:userId',getCount);
 
 module.exports = router;

@@ -470,13 +470,15 @@ const deleteExerciseOnId = async(req,res)=>{
   const updateLabExerciseOnExerciseId = async(req,res)=>{
     try {
         const exerciseData = req.body;
+        const files = req.files.map(file=>file.path);
+        const filesArray = files.length > 0 ? files : null;
         if(!exerciseData){
             return res.status(400).send({
                 success:false,
                 message:"Please provide exercise data"
             })
         }
-        const result = await clouSliceAwsService.updateLabExerciseContentOnExerciseId(exerciseData);
+        const result = await clouSliceAwsService.updateLabExerciseContentOnExerciseId(exerciseData,filesArray);
         if(!result){
             return res.status(404).send({
                 success:false,
@@ -509,12 +511,12 @@ const updateQuizExerciseOnExerciseId = async(req,res)=>{
             })
         }
         const result = await clouSliceAwsService.updateQuizExerciseContentOnExerciseId(exerciseData);
-        if(!result){
-            return res.status(404).send({
-                success:false,
-                message:"No exercise found with this id"
-            })
-        }
+        // if(!result){
+        //     return res.status(404).send({
+        //         success:false,
+        //         message:"No exercise found with this id"
+        //     })
+        // }
         return res.status(200).send({
             success:true,
             message:"Successfully updated exercise",
@@ -532,6 +534,208 @@ const updateQuizExerciseOnExerciseId = async(req,res)=>{
 
     }
 }
+
+//create a module
+const createModule = async(req,res)=>{
+    try {
+        const moduleData = req.body;
+        if(!moduleData) {
+            return res.status(400).send({
+                success:false,
+                message:"Please provide module data"
+            })
+        }
+        const result = await clouSliceAwsService.createModule(moduleData);
+        if (!result ) {
+            return res.status(404).send({
+                success: false,
+                message: "No module found with this id"
+            });
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully created module",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+        
+    }
+}
+
+//create a exercise
+const createExercise = async(req,res)=>{
+    try {
+        const {type , moduleId} = req.body;
+        if(!type || !moduleId) {
+            return res.status(400).send({
+                success:false,
+                message:"Please provide exercise data"
+            })
+        }
+        const result = await clouSliceAwsService.createExercise(type,moduleId);
+        if (!result ) {
+            return res.status(404).send({
+                success: false,
+                message: "No module found with this id"
+            });
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully created exercise",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+        
+    }
+}
+
+//create a quiz exercie content
+const createQuizExerciseContent = async(req,res)=>{
+    try {
+        const {title,quizData} = req.body;
+        if(!title || !quizData) {
+            return res.status(400).send({
+                success:false,
+                message:"Please provide quiz data"
+            })
+        }
+        const result = await clouSliceAwsService.createExerciseContent(title,quizData);
+        // if (!result ) {
+        //     return res.status(404).send({
+        //         success: false,
+        //         message: "No module found with this id"
+        //     });
+        // }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully created quiz exercise content",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+        
+    }
+   
+}
+const createLabExercise = async(req,res)=>{
+    try {
+        const exerciseData =req.body;
+        const files = req.files.map(file=>file.path);
+        const filesArray = files.length > 0 ? files : null;
+        if(!exerciseData) {
+            return res.status(400).send({
+                success:false,
+                message:"Please provide exercise data"
+            })
+        }
+        const result = await clouSliceAwsService.createLabExercise(exerciseData,filesArray);
+        if (!result ) {
+            return res.status(404).send({
+                success: false,
+                message: "No module found with this id"
+            });
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully created lab exercise",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })  
+    }
+}
+
+//delete cloudslice lab
+const deleteCloudSliceLab = async(req,res)=>{
+    try {
+        const labId = req.params.labId;
+        
+        if(!labId){
+            return res.status(400).send({
+                success:false,
+                message:"Please provide lab id"
+            })
+        }
+        const result = await clouSliceAwsService.deleteCloudSliceLab(labId);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No cloud slice lab found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully deleted cloud slice lab",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+
+    }
+}
+
+//update cloud slice lab 
+const updateCloudSliceLab = async(req,res)=>{
+    try {
+        const labid = req.params.labId;
+        const labData = req.body;
+        if(!labData) {
+            return res.status(400).send({
+                success:false,
+                message:"Please provide lab data"
+            })
+        }
+        const result = await clouSliceAwsService.updateCloudSliceLab(labid,labData);
+        console.log(result)
+        if (!result ) {
+            return res.status(404).send({
+                success: false,
+                message: "No module found with this id"
+            });
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully updated cloud slice lab",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+        
+    }
+}
+
 
 module.exports = {
     getAllAwsServices,
@@ -551,4 +755,10 @@ module.exports = {
   deleteExerciseOnId,
   updateLabExerciseOnExerciseId,
   updateQuizExerciseOnExerciseId,
+  createModule,
+  createExercise,
+  createQuizExerciseContent,
+  createLabExercise,
+  deleteCloudSliceLab,
+  updateCloudSliceLab
 }
