@@ -401,6 +401,29 @@ const getCount = async (userId) => {
     }
 };
 
+//get cloudslicelabs of organization assigned
+const getCloudSliceOrgLabs = async (orgId) => {
+    try {
+      const result = await pool.query(queries.GET_ALL_CLOUDSLICE_LABS_ORG, [orgId]);
+  
+      if (!result.rows.length) {
+        throw new Error("No labs found for this organization");
+      }
+  
+      const labs = [];
+      
+      for (const row of result.rows) {
+        const labDetails = await pool.query(labQueries.GET_CLOUDSLICE_LABS_LABID, [row.labid]);
+        labs.push(labDetails.rows[0]);
+      }
+      return labs;
+    } catch (error) {
+      console.log(error.message);
+      throw new Error("Error in getting the Labs");
+    }
+  };
+  
+
 module.exports = {
     createLab,
     getAllLab,
@@ -430,4 +453,5 @@ module.exports = {
     getAssignLabOnLabId,
     updateSigleVmLabStatus,
     getCount,
+    getCloudSliceOrgLabs,
 }

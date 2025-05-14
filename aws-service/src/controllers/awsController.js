@@ -550,6 +550,31 @@ const labProgress = async(req,res)=>{
   }
 }
 
+//create iam user
+const createIamUser = async(req,res)=>{
+  try {
+    const {userName,services,role} = req.body;
+    const result = await terraformService.createIamUser(userName,services,role);
+    if(!result){
+      return res.status(400).send({
+        success:false,
+        message:"Could not create an iam account"
+      })
+    }
+    return res.status(200).send({
+      success:true,
+      message:"Successfully created the iam user"
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send({
+      success:true,
+      message:'Could not create the iam account',
+      error:error.message
+    })
+  }
+}
+
 module.exports = {
   ec2Terraform,
   runTf,
@@ -575,4 +600,5 @@ module.exports = {
   stopInstance,
   restartInstance,
   labProgress,
+  createIamUser
 };

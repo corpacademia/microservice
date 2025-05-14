@@ -7,6 +7,42 @@ const path = require('path');
 
 const executePythonScript = async (scriptName, args = []) => {
   return new Promise((resolve, reject) => {
+    console.log('args:',args)
+    const pythonProcess = spawn("python", [path.resolve(__dirname,scriptName), ...args]);
+    let result = "";
+    let errorResult = "";
+
+    pythonProcess.stdout.on("data", (data) => {
+      console.log(data.toString())
+      result += data.toString();
+    });
+
+    pythonProcess.stderr.on("data", (data) => {
+      console.log(data.toString())
+      errorResult += data.toString();
+    });
+
+    pythonProcess.on("close", (code) => {
+      if (code === 0) {
+        console.log(result.trim())
+        resolve(result.trim());
+      } else {
+        console.log(errorResult.trim())
+        reject(errorResult.trim());
+      }
+    });
+
+    // Optional: Timeout for script execution
+    // setTimeout(() => {
+    //   pythonProcess.kill();
+    //   reject("Python script execution timed out.");
+    // }, 30000); // 30 seconds timeout
+  });
+};
+
+const executeIamScript = async (scriptName,username,services,role) => {
+  return new Promise((resolve, reject) => {
+    const args = [username,services,role]
     const pythonProcess = spawn("python", [path.resolve(__dirname,scriptName), ...args]);
     let result = "";
     let errorResult = "";
@@ -82,6 +118,21 @@ const runTf = async (lab_id) => {
     };
   }
 };
+
+const createIamUser = async(userName,services,role)=>{
+   try {
+      if(!userName || !services || !role){
+        throw new Error("Please Provide the username and the services")
+      }
+
+      const scriptPath = path.resolve(__dirname,"../terraformScripts/iamUser.py")
+      const result = await executeIamScript(scriptPath,userName,services,role);
+      return { success: true, message: "Terraform script executed successfully", result };
+   } catch (error) {
+    throw new Error("Error executing Terraform script:", error.message);
+
+   }
+}
 
 // Instance to Data Processing
 const instanceToData = async (lab_id) => {
@@ -682,4 +733,5 @@ module.exports = {
   checkLabCloudInstanceLaunchedService,
   stopInstanceService,
   restartInstanceService,
+  createIamUser,
 };

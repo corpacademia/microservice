@@ -80,5 +80,7 @@ FROM (
   SELECT 'cloud-slice', COUNT(*) FROM cloudslicelab where createdby=$1
  
 ) AS subquery;
-`
+`,
+GET_ALL_CLOUDSLICE_LABS_ORG:`Select * from cloudsliceorgassignment where orgid=$1`,
+GET_CLOUDSLICE_LABS_LABID: `select * from cloudslicelab where labid=$1`
 }

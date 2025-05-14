@@ -633,6 +633,38 @@ const getCount = async (req, res) => {
     }
 };
 
+//get cloudslice labs of organization
+const getCloudSliceOrgLabs = async(req,res)=>{
+    try {
+        const orgId = req.params.orgId;
+        if (!orgId) {  
+            return res.status(400).send({
+                success: false,
+                message: "Organization ID is required",
+            });
+        }
+        const result = await labService.getCloudSliceOrgLabs(orgId);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No Labs Found for the organization"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully accessed the labs",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Error in getting Cloudslice labs of organization",
+            error:error.message
+        })
+    }
+}
+
 module.exports = {
     createLab,
     getAllLab,
@@ -659,4 +691,5 @@ module.exports = {
     getAssignLabOnLabId,
     UpdateSingleVmLabStatus,
     getCount,
+    getCloudSliceOrgLabs
 }

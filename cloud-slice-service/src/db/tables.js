@@ -31,6 +31,68 @@ const createTables = async () => {
             `
         )
 
+        //create a table for cloudslice organization assignment
+        await pool.query(`
+           CREATE TABLE IF NOT EXISTS cloudsliceorgassignment (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    labid UUID NOT NULL,
+    orgid UUID NOT NULL,
+    assigned_at TIMESTAMP DEFAULT NOW(),
+    assigned_by UUID,
+    status TEXT DEFAULT 'pending',
+    FOREIGN KEY (labid) REFERENCES cloudslicelab(labid),
+    FOREIGN KEY (orgid) REFERENCES organizations(id)
+);
+
+ `)
+
+        //create a table for cloudslice user assignment
+        await pool.query(`
+            create table if not exists cloudsliceuserassignment(
+            id uuid PRIMARY KEY NOT NULL default uuid_generate_v4(),
+            labid uuid,
+            user_id uuid,
+            assigned_by uuid,
+            assigned_at TIMESTAMP default NOW(),
+            status TEXT default 'pending',
+            start_date TIMESTAMP,
+            end_date TIMESTAMP,
+            launched boolean default false,
+            isrunnig boolean default false,
+            foreign key (labid) references cloudslicelab(labid)
+        )
+            `)
+
+           await pool.query(` create table if not exists cloudsliceusermodulestatus(
+                id uuid Primary key default uuid_generate_v4(),
+                user_id uuid,
+                labid uuid,
+                module_id uuid,
+                status TEXT default 'not-started'
+               );`)
+
+           await pool.query(`
+               create table if not exists cloudsliceuserlabexercisestatus(
+               id uuid primary key default uuid_generate_v4(),
+               module_id uuid,
+               exercise_id uuid,
+               isrunning boolean default false,
+               status TEXT default 'not-started'
+               );`)
+
+              await pool.query(`
+               create table if not exists cloudsliceuserquizexercisestatus(
+               id uuid primary key default uuid_generate_v4(),
+               module_id uuid,
+               exercise_id uuid,
+               user_id uuid,
+               total_questions INTEGER,
+               correct INTEGER,
+               incorrect INTEGER,
+               score Integer,
+               status TEXT default 'not-started'
+               );`)
+
         //create a table for cloudslicelab with modules
         // await pool.query(`
         //     CREATE TABLE IF NOT EXISTS cloudSliceLabWithModules (

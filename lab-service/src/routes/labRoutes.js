@@ -22,7 +22,8 @@ const { createLab,
     getOperatingSystemsFromDatabase,
     getAssignLabOnLabId,
     UpdateSingleVmLabStatus,
-    getCount
+    getCount,
+    getCloudSliceOrgLabs
 } = require('../controllers/labController');
 
 const router = express.Router();
@@ -53,5 +54,6 @@ router.get('/getOs',getOperatingSystemsFromDatabase);
 router.post('/getAssignLabOnId',getAssignLabOnLabId);
 router.post('/updateSingleVmStatus',UpdateSingleVmLabStatus);
 router.get('/getCountoflabs/:userId',getCount);
+router.get('/getCloudSliceLabsOfOrg/:orgId',getCloudSliceOrgLabs)
 
 module.exports = router;
