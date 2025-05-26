@@ -30,7 +30,7 @@ const placeholders = {
   name,
   email,
   password, // send raw password to user (consider security implications)
-  loginUrl: 'https://golabing.ai/login' // or dynamically generate
+  loginUrl: 'https://d3q8q5ntrgsj3v.cloudfront.net/' // or dynamically generate
 };
 
 for (const key in placeholders) {
@@ -182,7 +182,7 @@ const placeholders = {
   name,
   email,
   password, // send raw password to user (consider security implications)
-  loginUrl: 'https://golabing.ai/login' // or dynamically generate
+  loginUrl: 'https://d3q8q5ntrgsj3v.cloudfront.net/' // or dynamically generate
 };
 
 for (const key in placeholders) {
@@ -442,7 +442,7 @@ const addOrganizationUser = async (userData) => {
     name,
     email,
     password, // send raw password to user (consider security implications)
-    loginUrl: 'https://golabing.ai/login' // or dynamically generate
+    loginUrl: 'https://d3q8q5ntrgsj3v.cloudfront.net/' // or dynamically generate
   };
 
   for (const key in placeholders) {
