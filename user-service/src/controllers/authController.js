@@ -34,6 +34,7 @@ const signupController = async (req, res) => {
             message: "Successfully inserted data",
         });
     } catch (error) {
+      console.log("error",error)
         return res.status(500).send({
             success: false,
             message: "Could not insert the data",

@@ -9,8 +9,59 @@ require('dotenv').config();
 
 const signupService = async (name, email, password) => {
     try {
+       const existingUser = await pool.query(userQueries.getUserByEmailQuery, [email]);
+    if (existingUser.rows.length > 0) {
+    throw new Error('User with this email already exists ');
+   }
+    const existingOrgUser = await pool.query(userQueries.getOrgUserByEmailQuery, [email]);
+    if (existingOrgUser.rows.length > 0) {
+    throw new Error('User with this email already exists in the organization');
+    }
         const hashedPassword = await hashPassword(password);
         const result = await pool.query(userQueries.insertUserQuery, [name, email, hashedPassword]);
+
+        // 3. Prepare email HTML
+ const templatePath = path.join(
+  'C:/Users/Admin/Desktop/golab_project/Client/public/templates/email-template.html'
+);
+let htmlTemplate = fs.readFileSync(templatePath, 'utf8');
+
+const placeholders = {
+  name,
+  email,
+  password, // send raw password to user (consider security implications)
+  loginUrl: 'https://golabing.ai/login' // or dynamically generate
+};
+
+for (const key in placeholders) {
+  const regex = new RegExp(`{{${key}}}`, 'g');
+  htmlTemplate = htmlTemplate.replace(regex, placeholders[key]);
+}
+      // 4. Configure mail transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+const mailOptions = {
+  from:process.env.EMAIL_USER,
+  to: email,
+  subject: 'Your GoLabing.ai Account Credentials',
+  html: htmlTemplate
+};
+
+// 5. Send mail
+try {
+  await transporter.sendMail(mailOptions);
+  console.log('Email sent to:', email);
+} catch (err) {
+  console.error('Failed to send email:', err);
+  // Optionally log error or notify admin
+}
+
         return result.rows[0];
     } catch (error) {
         throw error;
@@ -30,9 +81,9 @@ const loginService = async (email, password) => {
         }
 
         const user = userResult.rows[0];
-
         // Compare password
         const isPasswordValid = await comparePassword(password, user.password);
+        console.log(isPasswordValid)
         if (!isPasswordValid) {
             return { success: false, message: "Invalid Password" };
         }
@@ -53,7 +104,7 @@ const loginService = async (email, password) => {
         
         const lastActiveDate = `${day} ${monthNames[month]} ${year} ${hours}:${minutes}:${seconds}`;
         
-        const updateQuery = user.admin_id 
+        const updateQuery = user.admin_id || user.admin_id === null
             ? userQueries.updateOrgUserLastActiveQuery 
             : userQueries.updateUserLastActiveQuery;
 
