@@ -40,40 +40,33 @@ const executePythonScript = async (scriptName, args = []) => {
   });
 };
 
-const executeIamScript = async (scriptName,username,services,role) => {
+const executeIamScript = async (scriptName, ...args) => {
   return new Promise((resolve, reject) => {
-    const args = [username,services,role]
-    const pythonProcess = spawn("python", [path.resolve(__dirname,scriptName), ...args]);
+    const pythonProcess = spawn("python", [path.resolve(__dirname, scriptName), ...args]);
+
     let result = "";
     let errorResult = "";
 
     pythonProcess.stdout.on("data", (data) => {
-      console.log(data.toString())
+      console.log(data.toString());
       result += data.toString();
     });
 
     pythonProcess.stderr.on("data", (data) => {
-      console.log(data.toString())
+      console.error(data.toString());
       errorResult += data.toString();
     });
 
     pythonProcess.on("close", (code) => {
       if (code === 0) {
-        console.log(result.trim())
         resolve(result.trim());
       } else {
-        console.log(errorResult.trim())
         reject(errorResult.trim());
       }
     });
-
-    // Optional: Timeout for script execution
-    // setTimeout(() => {
-    //   pythonProcess.kill();
-    //   reject("Python script execution timed out.");
-    // }, 30000); // 30 seconds timeout
   });
 };
+
 
 // EC2 Terraform Execution
 const ec2Terraform = async (cloudPlatform) => {
@@ -119,20 +112,101 @@ const runTf = async (lab_id) => {
   }
 };
 
-const createIamUser = async(userName,services,role)=>{
+const createIamUser = async (...args) => {
+  try {
+    if (args.length < 2) {
+      throw new Error("Please provide at least a username and one service.");
+    }
+
+    const scriptPath = path.resolve(__dirname, "../terraformScripts/iamUser.py");
+
+    const result = await executeIamScript(scriptPath, ...args);
+    return {
+      success: true,
+      message: "Terraform script executed successfully",
+      result
+    };
+
+  } catch (error) {
+    throw new Error(`Error executing Terraform script: ${error.message}`);
+  }
+};
+//edit the aws services
+const editAwsServices = async(...args) =>{
    try {
-      if(!userName || !services || !role){
-        throw new Error("Please Provide the username and the services")
-      }
-
-      const scriptPath = path.resolve(__dirname,"../terraformScripts/iamUser.py")
-      const result = await executeIamScript(scriptPath,userName,services,role);
-      return { success: true, message: "Terraform script executed successfully", result };
+    if (args.length < 2) {
+      throw new Error("Please provide at least a username and  service.");
+    }
+    const scriptPath = path.resolve(__dirname,'../terraformScripts/editAwsServices.py');
+    const result = await executeIamScript(scriptPath, ...args)
+    return {
+      success:true,
+      message:"Terraform script executed successfully",
+      result
+    }
    } catch (error) {
-    throw new Error("Error executing Terraform script:", error.message);
-
+     console.log(error);
+     throw new Error(`Error executing edit services: ${error.message}`)
    }
 }
+
+//add the aws services
+const addAwsServices = async(...args) =>{
+  try {
+   if (args.length < 2) {
+     throw new Error("Please provide at least a username and  service.");
+   }
+   const scriptPath = path.resolve(__dirname,'../terraformScripts/addAwsServices.py');
+   const result = await executeIamScript(scriptPath, ...args);
+   return {
+     success:true,
+     message:"Terraform script executed successfully",
+     result
+   }
+  } catch (error) {
+    console.log(error);
+    throw new Error(`Error executing edit services: ${error.message}`)
+  }
+}
+
+//delete iam account
+const deleteIamAccount = async(...args) =>{
+  try {
+   if (args.length < 1) {
+     throw new Error("Please provide at least a username and  service.");
+   }
+   const scriptPath = path.resolve(__dirname,'../terraformScripts/deleteIamAccount.py');
+   const result = await executeIamScript(scriptPath, ...args);
+   return {
+     success:true,
+     message:"Terraform script executed successfully",
+     result
+   }
+  } catch (error) {
+    console.log(error);
+    throw new Error(`Error executing edit services: ${error.message}`)
+  }
+}
+
+//delete the permissions allocated to the iam account
+const deletePermissions = async(...args)=>{
+      try {
+        if (args.length < 1) {
+          throw new Error("Please provide  a username.");
+        }
+        const scriptPath = path.resolve(__dirname,'../terraformScripts/deletePermissions.py');
+        const result = await executeIamScript(scriptPath, ...args)
+        return {
+          success:true,
+          message:"Terraform script executed successfully",
+          result
+        }
+      } catch (error) {
+        console.log(error);
+        throw new Error(`Error executing deleting services: ${error.message}`)
+      }
+}
+
 
 // Instance to Data Processing
 const instanceToData = async (lab_id) => {
@@ -734,4 +808,8 @@ module.exports = {
   stopInstanceService,
   restartInstanceService,
   createIamUser,
+  editAwsServices,
+  deletePermissions,
+  addAwsServices,
+  deleteIamAccount
 };

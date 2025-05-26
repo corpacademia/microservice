@@ -11,8 +11,17 @@ module.exports = {
     INSERT_QUIZ_OPTIONS:`INSERT INTO options(question_id,option_text,option_id,is_correct) VALUES($1,$2,$3,$4) RETURNING *`,
     INSERT_CLOUDSLICE_USER_ASSIGNMENT:`INSERT INTO cloudsliceuserassignment(labid,user_id,assigned_by,start_date,end_date) VALUES($1,$2,$3,$4,$5) RETURNING *`,
     INSERT_INTO_QUIZ_EXERCISE_STATUS:`INSERT INTO cloudsliceuserquizexercisestatus(module_id,exercise_id,total_questions,correct,incorrect,score,status,user_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-    
+    INSERT_INTO_LAB_EXERCISE_STATUS_USER:`INSERT INTO cloudsliceuserlabexercisestatus (module_id,exercise_id,isrunning,status,completed_in,user_id) VALUES($1,$2,$3,$4,$5,$6) RETURNING *`,
+
+    UPDATE_INTO_QUIZ_EXERCISE_STATUS:`UPDATE INTO cloudsliceuserquizexercisestatus SET total_questions=$1,correct=$2,incorrect=$3,score=$4,status=$5 where module_id=$6 and exercise=$7 and user_id=$7 RETURNING *`,
+    UPDATE_INTO_LAB_EXERCISE_STATUS_USER:`UPDATE INTO cloudsliceuserlabexercisestatus SET isrunning=$1,status=$2,completed_in=$3 where module_id=$4 and exercise=$5 and user_id=$6 RETURNING *`,
+
     GET_USER_QUIZ_EXERCISE_STATUS:`SELECT * FROM cloudsliceuserquizexercisestatus WHERE module_id = $1 AND user_id = $2`,
+    GET_USER_LAB_EXERCISE_STATUS:`SELECT * From cloudsliceuserlabexercisestatus WHERE module_id = $1 AND user_id = $2`,
+
+    GET_USER_QUIZ_EXERCISE_STATUS_EX:`SELECT * FROM cloudsliceuserquizexercisestatus WHERE module_id = $1 AND exercise_id=$2 AND user_id = $3`,
+    GET_USER_LAB_EXERCISE_STATUS_EX:`SELECT * From cloudsliceuserlabexercisestatus WHERE module_id = $1 AND exercise_id=$2 AND user_id = $3`,
+
     GET_ALL_LABS_ON_CREATED_USER:`SELECT * FROM cloudslicelab where createdby = $1`,
     GET_ALL_LABS_FROM_ORGANIZATION_ASSIGNMENT:`SELECT * FROM cloudsliceorgassignment where orgid = $1`,
     GET_LABS_ON_ID:`SELECT * FROM cloudslicelab where labid = $1`,
@@ -93,6 +102,12 @@ WHERE
   GET_ALL_EXERCISES_ON_MODULEID:`SELECT * FROM exercises WHERE module_id = $1`,
   DELETE_CLOUDSLICE_USER_ASSIGNMENT:`DELETE FROM cloudsliceuserassignment WHERE labid = $1  RETURNING *`,
   DELETE_CLOUD_SLICE_USER_ASSIGNMENT_ON_LABID_USERID:`DELETE FROM cloudsliceuserassignment WHERE labid = $1 and user_id = $2 RETURNING *`,
+  DELETE_CLOUDSLICE_USER_LAB_EXERCISE_STATUS:`DELETE FROM cloudsliceuserlabexercisestatus WHERE module_id = $1 and exercise_id=$2  RETURNING *`,
+  DELETE_CLOUDSLICE_USER_QUIZ_EXERCISE_STATUS:`DELETE FROM cloudsliceuserquizexercisestatus WHERE module_id = $1 and exercise_id=$2  RETURNING *`,
+
+  DELETE_CLOUDSLICE_USER_LAB_EXERCISE_STATUS_INDIVIDUAL:`DELETE FROM cloudsliceuserlabexercisestatus WHERE module_id = $1 and exercise_id=$2 AND user_id=$3 RETURNING *`,
+  DELETE_CLOUDSLICE_USER_QUIZ_EXERCISE_STATUS_INDIVIDUAL:`DELETE FROM cloudsliceuserquizexercisestatus WHERE module_id = $1 and exercise_id=$2 and user_id=$3 RETURNING *`,
+
   DELETE_CLOUDSLICE_ORG_ASSIGNMENT:`DELETE FROM cloudsliceorgassignment WHERE labid = $1  RETURNING *`,
   UPDATE_EXERCISE_ON_ID:`UPDATE exercises SET type = $1 WHERE id = $2 RETURNING *`,
   UPDATE_LAB_EXERCISE_ON_EXERCISE_ID:`UPDATE lab_exercises SET title=$1, estimated_duration=$2 where exercise_id = $3 RETURNING *`,
@@ -107,5 +122,6 @@ WHERE
   UPDATE_CLOUDSLICELAB_STATUS:`UPDATE cloudslicelab set status=$1 ,launched=$2 where labid=$3 and  createdby=$4 RETURNING *`,
   UPDATE_CLOUDSLICELAB_ORG_STATUS:`UPDATE cloudsliceorgassignment set status=$1 ,launched=$2 where labid=$3 and orgid=$4 Returning *`,
   UPDATE_CLOUDSLICELAB_USER_STATUS:'UPDATE cloudsliceuserassignment set status=$1, launched=$2 where labid=$3 and user_id=$4 Returning *',
+  UPDATE_CLOUDSLICELAB_USER_RUNNING:`UPDATE cloudsliceuserassignment set isrunning=$1 where labid=$2 and user_id=$3 Returning *`,
   UPDATE_CLOUDSLICELAB_USER_TIMES:`UPDATE cloudsliceuserassignment set start_date=$1,end_date=$2 where labid=$3 and user_id=$4 RETURNING *`
 }

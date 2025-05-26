@@ -1,18 +1,24 @@
 const terraformService = require("../services/awsServices");
+const awsQueries = require("../services/awsQueries");
+const crypto = require("crypto");
+const pool = require('../dbconfig/db');
 
 //to track the progress of the lab creation process
-let progress = {
-  step1: false,
-  step2: false,
-  step3: false, 
-}
+// let progress = {
+//   step1: false,
+//   step2: false,
+//   step3: false, 
+// }
 
 // Controller: EC2 Terraform Execution
 const ec2Terraform = async (req, res) => {
   try {
-    const { cloudPlatform } = req.body;
+    const { cloudPlatform , lab_id } = req.body;
     const result = await terraformService.ec2Terraform(cloudPlatform);
-    progress.step1 = true; // Mark step 1 as completed
+    let query = awsQueries.INSERT_LAB_PROGRESS_STEP
+    query = query.replace("{step}", "step1");
+    const progressResult = await pool.query(query, [lab_id, true]);
+    // progress.step1 = true; // Mark step 1 as completed
     return res.status(200).send({
       success: true,
       message: "Python script executed successfully",
@@ -31,10 +37,11 @@ const ec2Terraform = async (req, res) => {
 // Controller: Run Terraform Script
 const runTf = async (req, res) => {
   try {
-    console.log(req.body)
     const { lab_id } = req.body;
     const result = await terraformService.runTf(lab_id);
-    progress.step2 = true; // Mark step 2 as completed
+    let query = awsQueries.UPDATE_LAB_PROGRESS_STEP
+    query = query.replace("{step}", "step2");
+    const progressResult = await pool.query(query, [lab_id, true]);
     return res.status(200).send({
       success: true,
       message: "Python script executed successfully",
@@ -216,10 +223,9 @@ const deleteSuperVm = async (req, res) => {
 const handleLaunchSoftwareOrStop = async (req, res) => {
   try {
       const { os_name, instance_id, hostname, password } = req.body;
-      console.log(req.body);
 
       const response = await terraformService.handleLaunchSoftwareOrStopService(os_name, instance_id, hostname, password);
-      console.log(response)
+     
       return res.status(200).send({
         success:true,
         message:"successfully executed..",
@@ -233,7 +239,6 @@ const handleLaunchSoftwareOrStop = async (req, res) => {
       });
   }
 };
-
 const getDecryptPasswordFromCloud = async (req, res) => {
   try {
     console.log("Decrypt password request received");
@@ -244,8 +249,10 @@ const getDecryptPasswordFromCloud = async (req, res) => {
     const response = await terraformService.getDecryptPasswordFromCloudService(lab_id, public_ip, instance_id);
 
     if (response.success) {
-      progress.step3 = true; // Mark step 3 as completed **only when execution is successful**
-      console.log("Decryption successful, progress updated:", progress);
+      let query = awsQueries.UPDATE_LAB_PROGRESS_STEP
+    query = query.replace("{step}", "step3");
+    const progressResult = await pool.query(query, [lab_id, true]);
+      console.log("Decryption successful, progress updated:");
     } else {
       console.error("Decryption failed, progress not updated.");
     }
@@ -301,7 +308,7 @@ const getUserDecryptPasswordFromCloud = async (req, res) => {
 
 const updateAssessmentStorage = async (req, res) => {
   try {
-      console.log("Edit Instance request received:", req.body);
+      console.log("Edit Instance request received:");
       const { new_volume_size, instance_id, lab_id } = req.body;
 
       const response = await terraformService.updateAssessmentStorageService(instance_id, new_volume_size, lab_id);
@@ -365,7 +372,7 @@ const startLab = async (req, res) => {
 
 const stopLab = async (req, res) => {
   try {
-      console.log("Stop Lab Request:", req.body);
+      console.log("Stop Lab Request:");
 
       const { aws_access_key, aws_secret_key } = req.body;
       const result = await terraformService.stopLabService(aws_access_key, aws_secret_key);
@@ -535,6 +542,15 @@ const restartInstance = async (req, res) => {
 //labprgress update
 const labProgress = async(req,res)=>{
   try {
+    const { lab_id } = req.body;
+    const result = await pool.query(awsQueries.GET_LAB_PROGRESS, [lab_id]);
+    if (result.rows.length === 0) {
+      return res.status(404).send({
+        success: false,
+        message: "No lab progress found for the given lab ID",
+      });
+    }
+    const progress = result.rows[0];
     return res.send({
       success: true,
       message: "Lab progress updated successfully",
@@ -551,25 +567,143 @@ const labProgress = async(req,res)=>{
 }
 
 //create iam user
-const createIamUser = async(req,res)=>{
+
+const createIamUser = async (req, res) => {
   try {
-    const {userName,services,role} = req.body;
-    const result = await terraformService.createIamUser(userName,services,role);
-    if(!result){
+    let { userName, services, role, ...rest } = req.body;
+
+    if (!userName || !services) {
+      return res.status(400).json({
+        success: false,
+        message: "userName and services are required"
+      });
+    }
+
+    // Generate 4-character random suffix and append to username
+    const suffix = crypto.randomBytes(2).toString("hex"); 
+    const finalUserName = `${userName}-${suffix}`;
+
+    // Collect dynamic arguments
+    const args = [finalUserName, services, role, ...Object.values(rest)];
+
+    const result = await terraformService.createIamUser(...args);
+
+    return res.status(200).json({
+      success: true,
+      message: "Successfully created the IAM user",
+      result
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Could not create the IAM account",
+      error: error.message
+    });
+  }
+};
+
+//edit aws services
+const editAwsServices = async(req,res)=>{
+  try {
+     const {userName,services} = req.body;
+     if(!userName || !services){
       return res.status(400).send({
         success:false,
-        message:"Could not create an iam account"
+        message:"Please provide username or services"
+      })
+     }
+     const args = [userName,services];
+     const result = await terraformService.editAwsServices(...args);
+     return res.status(200).json({
+      success: true,
+      message: "Successfully Edited the services",
+      result
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success:false,
+      message:"Could not edit the aws services",
+      error:error.message
+    })
+  }
+}
+//add aws services
+const addAwsServices = async(req,res)=>{
+  try {
+     const {userName,services} = req.body;
+     if(!userName || !services){
+      return res.status(400).send({
+        success:false,
+        message:"Please provide username or services"
+      })
+     }
+     const args = [userName,services];
+     const result = await terraformService.addAwsServices(...args);
+     return res.status(200).json({
+      success: true,
+      message: "Successfully Edited the services",
+      result
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success:false,
+      message:"Could not edit the aws services",
+      error:error.message
+    })
+  }
+}
+
+//delete iam account
+const deleteIamAccount = async(req,res)=>{
+  try {
+     const {userName} = req.body;
+     if(!userName ){
+      return res.status(400).send({
+        success:false,
+        message:"Please provide username or services"
+      })
+     }
+     const args = [userName];
+     const result = await terraformService.deleteIamAccount(...args);
+     return res.status(200).json({
+      success: true,
+      message: "Successfully Edited the services",
+      result
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success:false,
+      message:"Could not edit the aws services",
+      error:error.message
+    })
+  }
+}
+//delete aws services
+const deleteAwsServices = async(req,res)=>{
+  try {
+    const {userName} = req.body;
+    const args = [userName];
+    const result = await terraformService.deletePermissions(...args);
+    if(!result){
+      return res.status(404).send({
+        success:false,
+        message:"No iam account found for the provided username"
       })
     }
     return res.status(200).send({
       success:true,
-      message:"Successfully created the iam user"
+      message:"Successfully deleted the services",
+      data:result
     })
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).send({
-      success:true,
-      message:'Could not create the iam account',
+      success:false,
+      message:"Could not delete the services",
       error:error.message
     })
   }
@@ -600,5 +734,9 @@ module.exports = {
   stopInstance,
   restartInstance,
   labProgress,
-  createIamUser
+  createIamUser,
+  editAwsServices,
+  deleteAwsServices,
+  addAwsServices,
+  deleteIamAccount
 };

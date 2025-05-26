@@ -2,6 +2,10 @@ const pool = require('../dbconfig/db');
 const {hashPassword,comparePassword,signJwt,verifyToken} = require('../helper/authHelper');
 const userQueries = require('../services/userQueries');
 const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config(); 
 
 const signupService = async (name, email, password) => {
     try {
@@ -93,9 +97,18 @@ const getAllUsers = async () => {
 };
 
 const addUser = async (userData) => {
+   try {
     const { name, email,password, role, organization } = userData.formData;
     const { id } = userData.user;
     const [orgName,orgType,orgId]= organization.split(',').map(val=>val.trim());
+     const existingUser = await pool.query(userQueries.getUserByEmailQuery, [email]);
+  if (existingUser.rows.length > 0) {
+    throw new Error('User with this email already exists ');
+  }
+  const existingOrgUser = await pool.query(userQueries.getOrgUserByEmailQuery, [email]);
+  if (existingOrgUser.rows.length > 0) {
+    throw new Error('User with this email already exists in the organization');
+  }
     const hashedPassword = await hashPassword(password);
 
     const result = await pool.query(userQueries.addUser, [
@@ -108,8 +121,54 @@ const addUser = async (userData) => {
         orgId,
         id,
     ]);
+ // 3. Prepare email HTML
+ const templatePath = path.join(
+  'C:/Users/Admin/Desktop/golab_project/Client/public/templates/email-template.html'
+);
+let htmlTemplate = fs.readFileSync(templatePath, 'utf8');
 
+const placeholders = {
+  name,
+  email,
+  password, // send raw password to user (consider security implications)
+  loginUrl: 'https://golabing.ai/login' // or dynamically generate
+};
+
+for (const key in placeholders) {
+  const regex = new RegExp(`{{${key}}}`, 'g');
+  htmlTemplate = htmlTemplate.replace(regex, placeholders[key]);
+}
+
+// 4. Configure mail transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+const mailOptions = {
+  from:process.env.EMAIL_USER,
+  to: email,
+  subject: 'Your GoLabing.ai Account Credentials',
+  html: htmlTemplate
+};
+
+// 5. Send mail
+try {
+  await transporter.sendMail(mailOptions);
+  console.log('Email sent to:', email);
+} catch (err) {
+  console.error('Failed to send email:', err);
+  // Optionally log error or notify admin
+}
     return result.rows[0];
+   } catch (error) {
+      console.log(error);
+      throw new Error("Could not add the user")
+   }
+   
 };
 
 const getUserData = async (userId) => {
@@ -286,13 +345,94 @@ const updateUserRole = async (userId, role) => {
 
 
   // Add Organization User
-const addOrganizationUser = async (userData) => {
-    const { name, email, password, role, admin_id ,organization,org_id,organization_type} = userData;
-    const hashedPassword = await bcrypt.hash(password, 10);
+// const addOrganizationUser = async (userData) => {
+//     const { name, email, password, role, admin_id ,organization,org_id,organization_type} = userData;
+//     const hashedPassword = await bcrypt.hash(password, 10);
     
-    const result = await pool.query(userQueries.ADD_ORG_USER, [name, email, hashedPassword, role, admin_id,organization,org_id,organization_type]);
-    return result.rows[0];
+//     const result = await pool.query(userQueries.ADD_ORG_USER, [name, email, hashedPassword, role, admin_id,organization,org_id,organization_type]);
+//     return result.rows[0];
+//   };
+
+
+const addOrganizationUser = async (userData) => {
+  try {
+    const { name, email, password, role, admin_id, organization, org_id, organization_type } = userData;
+  const existingUser = await pool.query(userQueries.getUserByEmailQuery, [email]);
+  if (existingUser.rows.length > 0) {
+    throw new Error('User with this email already exists ');
+  }
+  const existingOrgUser = await pool.query(userQueries.getOrgUserByEmailQuery, [email]);
+  if (existingOrgUser.rows.length > 0) {
+    throw new Error('User with this email already exists in the organization');
+  }
+  // 1. Hash the password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // 2. Insert into database
+  const result = await pool.query(userQueries.ADD_ORG_USER, [
+    name,
+    email,
+    hashedPassword,
+    role,
+    admin_id,
+    organization,
+    org_id,
+    organization_type
+  ]);
+  const newUser = result.rows[0];
+
+  // 3. Prepare email HTML
+  const templatePath = path.join(
+    'C:/Users/Admin/Desktop/golab_project/Client/public/templates/email-template.html'
+  );
+  let htmlTemplate = fs.readFileSync(templatePath, 'utf8');
+
+  const placeholders = {
+    name,
+    email,
+    password, // send raw password to user (consider security implications)
+    loginUrl: 'https://golabing.ai/login' // or dynamically generate
   };
+
+  for (const key in placeholders) {
+    const regex = new RegExp(`{{${key}}}`, 'g');
+    htmlTemplate = htmlTemplate.replace(regex, placeholders[key]);
+  }
+
+  // 4. Configure mail transporter
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  const mailOptions = {
+    from:process.env.EMAIL_USER,
+    to: email,
+    subject: 'Your GoLabing.ai Account Credentials',
+    html: htmlTemplate
+  };
+
+  // 5. Send mail
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Email sent to:', email);
+  } catch (err) {
+    console.error('Failed to send email:', err);
+    // Optionally log error or notify admin
+  }
+
+  return newUser;
+
+  } catch (error) {
+    console.log(error);
+    throw new Error(error.message || "Could not add organization user");
+  }
+}
+  
+
   
   // Get Organization Users
   const getOrganizationUsers = async (admin_id) => {

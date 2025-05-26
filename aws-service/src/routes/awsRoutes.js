@@ -27,6 +27,10 @@ const {
     restartInstance,
     labProgress,
     createIamUser,
+    editAwsServices,
+    deleteAwsServices,
+    addAwsServices,
+    deleteIamAccount
 } = require('../controllers/awsController');
 const { awsConfigure } = require('../../../lab-service/src/controllers/labController');
 
@@ -54,8 +58,12 @@ router.post('/checkIsLabInstanceLaunched', checkLabCloudInstanceLaunched);
 router.post('/stopInstance', stopInstance);
 router.post('/restart_instance',restartInstance);
 router.post('/checkvmcreated',awsConfigure);
-router.get('/labprogress',labProgress);
+router.post('/labprogress',labProgress);
 router.post('/createIamUser',createIamUser);
+router.post('/editAwsServices',editAwsServices);
+router.post('/deleteAwsServices',deleteAwsServices);
+router.post('/addAwsServices',addAwsServices);
+router.post('/deleteIamAccount',deleteIamAccount)
 
 module.exports = router;
 

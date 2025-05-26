@@ -32,6 +32,16 @@ const createTables = async()=>{
               
         );
 
+        //single-vm lab progress table
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS singlevm_lab_progress (
+          user_id UUID PRIMARY KEY,
+          step1 BOOLEAN DEFAULT false,
+          step2 BOOLEAN DEFAULT false,
+          step3 BOOLEAN DEFAULT false
+           );  
+          `)
+
         //lab configuration table
 
         await pool.query(

@@ -12,5 +12,7 @@ module.exports = {
     GET_CLOUD_ASSIGNED_INSTANCE: "SELECT * FROM cloudAssignedInstance WHERE user_id = $1 AND lab_id = $2",
     CHECK_CLOUD_ASSIGNED_INSTANCE_LAUNCHED: "SELECT * FROM cloudassignedinstance WHERE lab_id = $1 AND user_id = $2",
     CHECK_LAB_CLOUD_INSTANCE_LAUNCHED: "SELECT * FROM instances WHERE lab_id = $1",
-    
+    GET_LAB_PROGRESS: "SELECT * FROM singlevm_lab_progress WHERE lab_id = $1",
+    INSERT_LAB_PROGRESS_STEP: `INSERT INTO singlevm_lab_progress ( lab_id,{step})  VALUES($1,$2) RETURNING *`,
+    UPDATE_LAB_PROGRESS_STEP:`UPDATE singlevm_lab_progress SET {step} = $2 WHERE lab_id = $1 RETURNING *`,
    }

@@ -12,5 +12,8 @@
     "devDependencies": {
         "concurrently": "^9.1.2",
         "install": "^0.13.0"
+    },
+    "dependencies": {
+        "mime-types": "^3.0.1"
     }
 }

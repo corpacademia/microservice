@@ -1073,6 +1073,38 @@ const getUserQuizData = async(req,res)=>{
     }
 }
 
+//get user lab status data
+const  getUserLabExerciseStatus = async(req,res)=>{
+    try {
+        const {moduleId,userId} = req.body;
+        if(!moduleId || !userId){
+            return res.status(400).send({
+                success:false,
+                message:"Please provide module id and exercise id"
+            })
+        }
+        const result = await cloudSliceAwsService.getUserLabExerciseStatus(moduleId,userId);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No cloud slice lab found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully fetched quiz exercise status",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Internal server error",
+            error:error.message
+        })
+    }
+}
+
 //update the cloudslice lab status
 const updateCloudSliceLabStatus = async(req,res)=>{
     try {
@@ -1172,6 +1204,34 @@ const updateCloudSliceLabOfUser = async(req,res)=>{
         })
     }
 }
+//update running state of cloudslicelab of user
+const updateCloudSliceLabRunningStateOfUser = async(req,res)=>{
+    try {
+        const data = req.body;
+        if( !data){
+            throw new Error("Please Provide the details")
+        }
+        const response = await cloudSliceAwsService.updateCloudSliceLabRunningState(data);
+        if(!response){
+            return res.status(404).send({
+                success:false,
+                messge:"No lab found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully updated the user status",
+            data:response
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Could not update the user lab status",
+            error:error.message
+        })
+    }
+}
 
 //update cloudsliceuserlab times
 const updateUserCloudSliceLabTimes = async(req,res)=>{
@@ -1226,6 +1286,38 @@ const getAllCloudSliceLabs = async(req,res)=>{
     }
 }
 
+//add lab status of user
+const addLabStatusOfUser = async(req,res)=>{
+    try {
+        const data = req.body;
+        if(!data){
+            return res.status(400).send({
+                success:false,
+                message:"Please provide the required data"
+            })
+        }
+        const result = await cloudSliceAwsService.addLabStatusOfUser(data);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No exercise found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully updated the status",
+            data:result
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Successfully updated the status",
+            error:error.message
+        })
+    }
+}
+
 module.exports = {
     getAllAwsServices,
     createCloudSliceLab,
@@ -1264,5 +1356,8 @@ module.exports = {
     updateCloudSliceLabOfUser,
     getAllLabDetailsForOrgAssigned,
     updateUserCloudSliceLabTimes,
-    getAllCloudSliceLabs
+    getAllCloudSliceLabs,
+    updateCloudSliceLabRunningStateOfUser,
+    addLabStatusOfUser,
+    getUserLabExerciseStatus
 }

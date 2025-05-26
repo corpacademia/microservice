@@ -1,6 +1,7 @@
 const cloudSliceAwsQueries = require('./cloudSliceQueries');
 
 const pool= require('../db/dbconfig');
+const e = require('express');
 
 //function to get the files path with matching name
 function getMatchingFilePaths(filePaths, files) {
@@ -592,13 +593,13 @@ const deleteExerciseOnId = async(exerciseId)=>{
             throw new Error('No lab found with this id');
         }
       //delete the lab
-      const lab = await pool.query(cloudSliceAwsQueries.DELETE_CLOUD_SLICE_LAB_ON_ID, [labId]);
+    const lab = await pool.query(cloudSliceAwsQueries.GET_LABS_ON_ID, [labId]);
+      
       if (!lab.rows.length) {
         throw new Error('No lab found with this id');
       }
       if (lab.rows[0].modules === 'with-modules') {
         const modules = await pool.query(cloudSliceAwsQueries.GET_MODULES_ON_LABID, [labId]);
-        
         // if (!modules.rows.length) {
         //   throw new Error('No modules found with this lab id');
         // }
@@ -609,10 +610,12 @@ const deleteExerciseOnId = async(exerciseId)=>{
   
           for (const exercise of exercises.rows) {
             const exerciseId = exercise.id;
-  
             if (exercise.type === 'lab') {
               await pool.query(cloudSliceAwsQueries.DELETE_LAB_EXERCISE_ON_EXERCISE_ID, [exerciseId]);
+              const deleteUserStatus =  await pool.query(cloudSliceAwsQueries.DELETE_CLOUDSLICE_USER_LAB_EXERCISE_STATUS,[moduleId,exerciseId]);
+              
             } else if (exercise.type === 'questions') {
+                await pool.query(cloudSliceAwsQueries.DELETE_CLOUDSLICE_USER_QUIZ_EXERCISE_STATUS,[moduleId,exerciseId])
               const questionResult = await pool.query(cloudSliceAwsQueries.GET_QUESTIONS_BY_EXERCISE_ID, [exerciseId]);
   
               for (const question of questionResult.rows) {
@@ -628,7 +631,8 @@ const deleteExerciseOnId = async(exerciseId)=>{
           await pool.query(cloudSliceAwsQueries.DELETE_MODULE_ON_ID, [moduleId]);
         }
       }
-  
+        //delete the lab
+        await pool.query(cloudSliceAwsQueries.DELETE_CLOUD_SLICE_LAB_ON_ID, [labId]);
       return lab.rows[0];
     } catch (error) {
       console.error(error);
@@ -720,12 +724,35 @@ const getAllLabsFromOrgAssignment = async(organizationId)=>{
 //delete organization assignment lab
 const deleteOrgAssignmentLab = async(labId,organizationId)=>{
     try {
-        //delete user assigned labs
-        const userAssignment = await pool.query(cloudSliceAwsQueries.DELETE_CLOUDSLICE_USER_ASSIGNMENT,[labId]);
+         const userAssignment = await pool.query(cloudSliceAwsQueries.DELETE_CLOUDSLICE_USER_ASSIGNMENT,[labId]);
         const result = await pool.query(cloudSliceAwsQueries.DELETE_ORG_ASSIGNMENT_ON_ID_ORGID,[labId,organizationId]);
-        if (!result.rows.length) {
+         if (!result.rows.length) {
             throw new Error('No lab found with this id');
         }
+        //delete user assigned labs
+        const lab = await pool.query(cloudSliceAwsQueries.GET_LABS_ON_ID, [labId]);
+      
+      if (!lab.rows.length) {
+        throw new Error('No lab found with this id');
+      }
+      if (lab.rows[0].modules === 'with-modules') {
+        const modules = await pool.query(cloudSliceAwsQueries.GET_MODULES_ON_LABID, [labId]);
+        for(const module of modules.rows){
+            const moduleId = module.id;
+            const exercises = await pool.query(cloudSliceAwsQueries.GET_ALL_EXERCISES_ON_MODULEID, [moduleId]);
+            for(const exercise of exercises.rows){
+                const exerciseId = exercise.id;
+                if (exercise.type === 'lab'){
+                    const deleteUserStatus =  await pool.query(cloudSliceAwsQueries.DELETE_CLOUDSLICE_USER_LAB_EXERCISE_STATUS,[moduleId,exerciseId]);
+                }
+                else if (exercise.type === 'questions'){
+                    await pool.query(cloudSliceAwsQueries.DELETE_CLOUDSLICE_USER_QUIZ_EXERCISE_STATUS,[moduleId,exerciseId])
+                }
+                
+            }
+        }
+      }
+       
         return result.rows[0];
     } catch (error) {
         console.log(error);
@@ -840,6 +867,28 @@ const deleteCloudSliceLabForUser = async(labId,userId)=>{
         if (!result.rows.length) {
             throw new Error('No lab found with this id');
         }
+         const lab = await pool.query(cloudSliceAwsQueries.GET_LABS_ON_ID, [labId]);
+      
+      if (!lab.rows.length) {
+        throw new Error('No lab found with this id');
+      }
+      if (lab.rows[0].modules === 'with-modules') {
+        const modules = await pool.query(cloudSliceAwsQueries.GET_MODULES_ON_LABID, [labId]);
+        for(const module of modules.rows){
+            const moduleId = module.id;
+            const exercises = await pool.query(cloudSliceAwsQueries.GET_ALL_EXERCISES_ON_MODULEID, [moduleId]);
+            for(const exercise of exercises.rows){
+                const exerciseId = exercise.id;
+                if (exercise.type === 'lab'){
+                    const deleteUserStatus =  await pool.query(cloudSliceAwsQueries.DELETE_CLOUDSLICE_USER_LAB_EXERCISE_STATUS_INDIVIDUAL,[moduleId,exerciseId,userId]);
+                }
+                else if (exercise.type === 'questions'){
+                    await pool.query(cloudSliceAwsQueries.DELETE_CLOUDSLICE_USER_QUIZ_EXERCISE_STATUS_INDIVIDUAL,[moduleId,exerciseId,userId])
+                }
+                
+            }
+        }
+      }
         return result.rows[0];
     } catch (error) {
         console.log(error);
@@ -858,11 +907,22 @@ const updateCloudSliceQuizData = async(moduleId,userId,exerciseId,data)=>{
         if (!userId || !moduleId || !score || !totalQuestions || !correctAnswers ) {
             throw new Error('Please provide all required fields in lab assignment');
         }
-        const result = await pool.query(cloudSliceAwsQueries.INSERT_INTO_QUIZ_EXERCISE_STATUS,[moduleId,exerciseId,totalQuestions,correctAnswers,incorrectAnswers,score,'completed',userId]);
+        const isExists = await pool.query(cloudSliceAwsQueries.GET_USER_QUIZ_EXERCISE_STATUS_EX,[moduleId,exerciseId,userId]);
+        if(isExists.rows.length){
+            const result = await pool.query(cloudSliceAwsQueries.UPDATE_INTO_QUIZ_EXERCISE_STATUS,[totalQuestions,correctAnswers,incorrectAnswers,score,'completed',moduleId,exerciseId,userId]);
+            if (!result.rows.length) {
+                throw new Error('No lab found with this id');
+            }
+            return result.rows[0];  
+        }
+        else{
+            const result = await pool.query(cloudSliceAwsQueries.INSERT_INTO_QUIZ_EXERCISE_STATUS,[moduleId,exerciseId,totalQuestions,correctAnswers,incorrectAnswers,score,'completed',userId]);
         if (!result.rows.length) {
             throw new Error('No lab found with this id');
         }
         return result.rows[0];
+        }
+        
     } catch (error) {
         console.log(error);
         throw new Error('Error in updateCloudSliceQuizData function', error);
@@ -883,6 +943,20 @@ const getUserQuizExerciseStatus = async(moduleId,userId)=>{
     }
 }
 
+//get user lab exercise status
+const getUserLabExerciseStatus =  async(moduleId,userId)=>{
+    try {
+        const result = await pool.query (cloudSliceAwsQueries.GET_USER_LAB_EXERCISE_STATUS,[moduleId,userId]);
+        if(!result.rows.length){
+            throw new Error("No lab found with this id");
+        }
+        return result.rows;
+    } catch (error) {
+        console.log(error);
+        throw new Error("Error in getting lab exercise status",error.message)
+    }
+}
+
 //update cloudslice lab status
 const updateCloudSliceLabStatus = async(data)=>{
      try {
@@ -899,6 +973,24 @@ const updateCloudSliceLabStatus = async(data)=>{
         console.log(error)
        throw new Error("Errror in updating",error.message)
      }
+}
+//update cloudslice lab running state
+const updateCloudSliceLabRunningState = async(data)=>{
+    try {
+        console.log(data)
+        const {labId, userId ,isRunning } = data;
+        if(!labId || !userId){
+            throw new Error('Please provide the labid or userid')
+        }
+        const result = await pool.query(cloudSliceAwsQueries.UPDATE_CLOUDSLICELAB_USER_RUNNING,[isRunning,labId,userId])
+        if (!result.rows.length) {
+            throw new Error('No lab found with this id');
+        }
+        return result.rows[0];
+    } catch (error) {
+        console.log(error);
+        throw new Error("Error in updating:",error.message);
+    }
 }
 
 //update cloudslice lab status for org assigned
@@ -963,6 +1055,35 @@ const getAllCloudSliceLabs = async()=>{
     }
 }
 
+//insert lab status of user
+const addLabStatusOfUser = async(data)=>{
+    try {
+        const {module_id,exercise_id,isrunning,status,completed_in,user_id} = data;
+        if(!module_id || !exercise_id || !status  || !user_id){
+            throw new Error("Please provide required fields")
+        }
+        const isExist = await pool.query(cloudSliceAwsQueries.GET_USER_LAB_EXERCISE_STATUS_EX,[module_id,exercise_id,user_id]);
+        if(isExist.rows.length){
+            const result = await pool.query(cloudSliceAwsQueries.UPDATE_INTO_LAB_EXERCISE_STATUS_USER,[isrunning,status,completed_in,module_id,exercise_id,user_id]);
+            if(!result.rows.length){    
+                throw new Error("No exercise found with this id")
+            }
+            return result.rows[0];
+        }
+        else{
+             const result = await pool.query(cloudSliceAwsQueries.INSERT_INTO_LAB_EXERCISE_STATUS_USER,[module_id,exercise_id,isrunning,status,completed_in,user_id]);
+        if(!result.rows.length){
+            throw new Error("No exercise found with this id")
+        }
+        return result.rows[0];
+        }
+       
+    } catch (error) {
+        console.log(error);
+        throw new Error('Error in storing the lab status of user',error.message);
+    }
+}
+
 module.exports = {
     getAllAwsServices,
     createCloudSliceLab,
@@ -1003,6 +1124,9 @@ module.exports = {
   updateCloudSliceLabOfUser,
   getAllLabDetailsForOrgAssignment,
   updateUserCloudSliceLabTimes,
-  getAllCloudSliceLabs
+  getAllCloudSliceLabs,
+  updateCloudSliceLabRunningState,
+  addLabStatusOfUser,
+  getUserLabExerciseStatus
 }
 

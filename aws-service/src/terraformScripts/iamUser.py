@@ -85,7 +85,7 @@ def get_console_login_link(iam_client):
     return console_url
 
 
-def insert_into_db(username, password, console_url, role):
+def update_credentials_in_db(username, password, console_url, role, labid, orgid=None, user_id=None):
     try:
         conn = psycopg2.connect(
             host="localhost",
@@ -98,36 +98,68 @@ def insert_into_db(username, password, console_url, role):
 
         if role == "superadmin":
             table = "cloudslicelab"
+            query = f"""
+                UPDATE {table}
+                SET username = %s, password = %s, console_url = %s
+                WHERE labid = %s;
+            """
+            cur.execute(query, (username, password, console_url, labid))
+
         elif role == "orgadmin":
-            table = 'cloudsliceorgassignment'
+            table = "cloudsliceorgassignment"
+            if orgid is None:
+                print("Error: orgid is required for orgadmin role.")
+                return
+            query = f"""
+                UPDATE {table}
+                SET username = %s, password = %s, console_url = %s
+                WHERE labid = %s AND orgid = %s;
+            """
+            cur.execute(query, (username, password, console_url, labid, orgid))
+
         elif role == "user":
             table = "cloudsliceuserassignment"
+            if user_id is None:
+                print("Error: user_id is required for user role.")
+                return
+            query = f"""
+                UPDATE {table}
+                SET username = %s, password = %s, console_url = %s
+                WHERE labid = %s AND user_id = %s;
+            """
+            cur.execute(query, (username, password, console_url, labid, user_id))
+
         else:
-            print("Invalid role provided. No DB insertion.")
+            print("Invalid role provided. No DB update performed.")
             return
 
-        insert_query = f"""
-            INSERT INTO {table} (username, password, console_url)
-            VALUES (%s, %s, %s);
-        """
-        cur.execute(insert_query, (username, password, console_url))
         conn.commit()
         cur.close()
         conn.close()
-        print(f"Credentials inserted into '{table}' table successfully.")
+        print(f"Credentials updated in '{table}' table successfully.")
+
     except Exception as e:
-        print(f"Database insertion error: {e}")
+        print(f"Database update error: {e}")
         sys.exit(1)
 
 
 def main():
-    if len(sys.argv) != 4:
-        print("Usage: python iam_user.py <username> <service1,service2,...> <role>")
+    if len(sys.argv) < 5:
+        print("Usage: python iam_user.py <username> <service1,service2,...> <role> <labid> [orgid] [user_id]")
         sys.exit(1)
 
     username = sys.argv[1]
     services = sys.argv[2].split(",")
     role = sys.argv[3]
+    labid = sys.argv[4]
+    orgid =None
+    user_id=None
+    if role == 'orgadmin':
+        orgid = sys.argv[5]
+    elif role == 'user':
+        user_id = sys.argv[5]
+    # orgid = sys.argv[5] if len(sys.argv) > 5 else None
+    # user_id = sys.argv[6] if len(sys.argv) > 6 else None
 
     iam_client = boto3.client('iam')
 
@@ -150,7 +182,7 @@ def main():
     print(f"Console Login URL: {console_url}")
 
     # Save credentials to PostgreSQL
-    insert_into_db(username, password, console_url, role)
+    update_credentials_in_db(username, password, console_url, role, labid, orgid, user_id)
 
 
 if __name__ == "__main__":
