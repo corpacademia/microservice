@@ -30,7 +30,7 @@ const placeholders = {
   name,
   email,
   password, // send raw password to user (consider security implications)
-  loginUrl: 'https://d3q8q5ntrgsj3v.cloudfront.net/' // or dynamically generate
+  loginUrl: 'https://app.golabing.ai/' // or dynamically generate
 };
 
 for (const key in placeholders) {

@@ -31,6 +31,20 @@ const createTables = async()=>{
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`
               
         );
+        //single-vm datacenter table
+        await pool.query(`
+          create table if not exist singlevmdatacenter_lab(
+          lab_id uuid primary key default uuid_generate_v4(),
+          user_id uuid,
+          title text,
+          description text,
+          type text,
+          platform text,
+          status text default 'pending',
+          created_at timestamp default now(),
+          labguide text[],
+          userguide text[]
+      )`)
 
         //single-vm lab progress table
         await pool.query(`

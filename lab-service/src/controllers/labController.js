@@ -1,28 +1,113 @@
 const labService = require('../services/labService');
 
-const createLab=async(req,res)=>{
-    try{
-       const {data,user} = req.body; 
-       const output = await labService.createLab(data,user);
-       if(!output){
-        return res.status(405).send({
-            success:false,
-            message:"Could not store the lab catalogue",
-        })
-       }
-       res.status(200).send({
-        success:true,
-        message:"Successfully stored the catalogue",
-        output:output,
-       })
+const path = require('path');
+const fs = require('fs');
+
+const uploadDir = path.join(__dirname, '../public/uploads');
+
+const createLab = async (req, res) => {
+  try {
+    const { data, user} = req.body;
+    const { userGuides = [], labGuides = [] } = data;
+    const savedUserGuidePaths = [];
+    const savedLabGuidePaths = [];
+
+    // Save user guide files and collect full paths
+    userGuides.forEach(file => {
+      const base64Data = file.content.split(';base64,').pop();
+      const filePath = path.join(uploadDir, file.name);
+      fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+      savedUserGuidePaths.push(filePath); 
+    });
+
+    // Save lab guide files and collect full paths
+    labGuides.forEach(file => {
+      const base64Data = file.content.split(';base64,').pop();
+      const filePath = path.join(uploadDir, file.name);
+      fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+      savedLabGuidePaths.push(filePath); 
+    });
+    // Add full paths to the data object
+    const updatedData = {
+      ...data,
+      userGuides: savedUserGuidePaths,
+      labGuides: savedLabGuidePaths,
+    };
+
+    const output = await labService.createLab(updatedData, user);
+
+    if (!output) {
+      return res.status(405).send({
+        success: false,
+        message: "Could not store the lab catalogue",
+      });
     }
-    catch(error){
-        console.log(error)
+
+    res.status(200).send({
+      success: true,
+      message: "Successfully stored the catalogue",
+      output,
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({
+      success: false,
+      message: "Could not create the lab",
+      error,
+    });
+  }
+};
+
+//create single vm datacenter lab
+const createSingleVmDatacenterLab = async (req,res)=>{
+    try {
+        const { data, user } = req.body;
+        const { userGuides = [], labGuides = [] } = data;
+        const savedUserGuidePaths = [];
+        const savedLabGuidePaths = [];
+        // Save user guide files and collect full paths
+        userGuides.forEach(file => {
+      const base64Data = file.content.split(';base64,').pop();
+      const filePath = path.join(uploadDir, file.name);
+      fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+      savedUserGuidePaths.push(filePath); 
+    });
+
+    // Save lab guide files and collect full paths
+    labGuides.forEach(file => {
+      const base64Data = file.content.split(';base64,').pop();
+      const filePath = path.join(uploadDir, file.name);
+      fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+      savedLabGuidePaths.push(filePath); 
+    });
+    // Add full paths to the data object
+    const updatedData = {
+      ...data,
+      userGuides: savedUserGuidePaths,
+      labGuides: savedLabGuidePaths,
+    };
+        const output = await labService.createSingleVmDatacenterLab(updatedData, user);
+        if (!output) {
+            return res.status(405).send({
+                success: false,
+                message: "Could not store the single vm datacenter lab",
+            });
+        }
+        return res.status(200).send({
+            success: true,  
+            message: "Successfully stored the single vm datacenter lab",
+            data:output,
+        });
+
+    } catch (error) {
+        console.error("Error in creating single vm datacenter lab:", error);
         return res.status(500).send({
-            success:false,
-            message:"Could not create the lab",
-            error
-        })
+            success: false,
+            message: "Could not create the single vm datacenter lab",
+            error: error.message,
+        });
+        
     }
 }
 
@@ -50,6 +135,279 @@ const getAllLab = async(req,res)=>{
     }
 }
 
+//get datacenter lab on admin id
+const getDatacenterLabOnAdminId = async (req, res) => {
+    try {
+        const { adminId } = req.body;
+        const result = await labService.getDatacenterLabsOnAdminId(adminId);
+        if (!result || result.length === 0) {
+            return res.status(404).send({
+                success: false,
+                message: "No datacenter labs found for the provided adminId",
+            });
+        }
+        return res.status(200).send({
+            success: true,
+            message: "Successfully accessed datacenter labs",
+            data: result,
+        });
+    } catch (error) {
+        return res.status(500).send({
+            success: false,
+            message: "Error in getting the datacenter labs",
+            error: error.message,
+        });
+    }
+}
+
+const getDatacenterLabOnLabId = async (req, res) => {
+    try {
+        const { labId } = req.body;
+        const result = await labService.getDatacenterLabsOnLabId(labId);
+        if (!result || result.length === 0) {
+            return res.status(404).send({
+                success: false,
+                message: "No datacenter labs found for the provided adminId",
+            });
+        }
+        return res.status(200).send({
+            success: true,
+            message: "Successfully accessed datacenter labs",
+            data: result,
+        });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({
+            success: false,
+            message: "Error in getting the datacenter labs",
+            error: error.message,
+        });
+    }
+}
+//connect to datacenter vm
+const connectDatacenterVM = async(req,res)=>{
+    try {
+        console.log(req.body);
+    const {Protocol,VmId,Ip,userName,password,port} = req.body;
+
+    if(!Protocol || !VmId || !Ip || !userName ||!password ||!port){
+        return res.status(404).send({
+            success:false,
+            message:"Please Provide the required fields."
+        })
+    }
+    const result = await labService.connectToVm(Protocol,VmId,Ip,userName,password,port);
+    if(!result.success){
+        return res.stautus(404).send({
+            success:false,
+            message:"Could not connect to datacenter vm"
+        })
+    }
+    return res.status(200).send({
+        success:true,
+        message:"Successfully connected to vm",
+        token:result
+    })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Error connectin to VM",
+            error:error.message
+        })
+    }
+   
+
+}
+
+//get datacenter lab credentials
+const getDatacenterLabCredentials = async (req, res) => {
+    try {
+        const { labId } = req.body;
+        if (!labId) {       
+            return res.status(400).send({
+                success: false,
+                message: "labId is required",
+            });
+        }
+        const result = await labService.getDatacenterLabCredentials(labId);
+        if (!result || result.length === 0) {
+            return res.status(404).send({
+                success: false,
+                message: "No credentials found for the provided labId",
+            });
+        }
+        return res.status(200).send({
+            success: true,
+            message: "Successfully accessed datacenter lab credentials",
+            data: result,
+        });
+    } catch (error) {
+        console.log("Error in getting datacenter lab credentials:", error);
+        return res.status(500).send({
+            success: false,
+            message: "Error in getting the datacenter lab credentials",
+            error: error.message,
+        });
+    }
+}
+
+//update single vm datacenter lab
+const updateSingleVmDatacenterLab = async (req, res) => {
+    try {
+        const { software, catalogueType, labId } = req.body;
+        if (!software || !catalogueType || !labId) {
+            return res.status(400).send({
+                success: false,
+                message: "Software, catalogueType, and labId are required",
+            });
+        }
+        const result = await labService.updateSingleVmDatacenterLab(labId,software, catalogueType); 
+        if (!result || result.length === 0) {
+            return res.status(404).send({
+                success: false,
+                message: "No datacenter lab found for the provided labId",
+            });
+        }
+        return res.status(200).send({
+            success: true,
+            message: "Successfully updated the single VM datacenter lab",
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error in updating single VM datacenter lab:", error);
+        return res.status(500).send({
+            success: false,
+            message: "Error in updating the single VM datacenter lab",
+            error: error.message,
+        });
+    }
+}
+
+//update single vm datacenter user creds running state
+const updateSingleVMDatacenterUserCredRunningState = async (req, res) => {
+    try {
+        const { isRunning, userId, labId } = req.body;
+        if (!userId || !labId ) {
+            return res.status(400).send({
+                success: false,
+                message: "Please Provide All The Required Fields",
+            });
+        }
+        const result = await labService.updateSingleVMDatacenterUserCredRunningState(isRunning, userId, labId); 
+        if (!result || result.length === 0) {
+            return res.status(404).send({
+                success: false,
+                message: "No datacenter lab found for the provided labId",
+            });
+        }
+        return res.status(200).send({
+            success: true,
+            message: "Successfully updated the single VM datacenter creds running state",
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error in updating single VM datacenter user creds running state :", error);
+        return res.status(500).send({
+            success: false,
+            message: "Error in updating single VM datacenter user creds running state",
+            error: error.message,
+        });
+    }
+}
+
+//delete single vm datacenter lab of user
+const deleteSingleVMDatacenterLabOfUser = async (req,res)=>{
+    try {
+        const { labId,userId } = req.body;
+        if(!labId || !userId){
+            return res.status(404).send({
+                success:false,
+                message:"Please Provide the required fields"
+            })
+        }
+        const result = labService.deleteSingleVMDatacenterLabForUser(labId,userId);
+        if(!result){
+            return res.status(400).send({
+                success:false,
+                message:"Could not delete the single vm datacenter lab of user"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully deleted the lab"
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Error in deleting the single vm datacenter lab",
+            error:error.message
+        })
+    }
+}
+//delete the single vm datacenter lab of org
+const deleteSingleVMDatacenterLabFromOrg = async (req,res)=>{
+    try {
+        const { labId,orgId } = req.body;
+        if(!labId || !orgId){
+            return res.status(404).send({
+                success:false,
+                message:"Please Provide the required fields"
+            })
+        }
+        const result = labService.deleteSingleVMDatacenterLabFromOrg(labId,orgId);
+        if(!result){
+            return res.status(400).send({
+                success:false,
+                message:"Could not delete the single vm datacenter lab "
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully deleted the lab"
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Error in deleting the single vm datacenter lab",
+            error:error.message
+        })
+    }
+}
+
+//update the single vm datacenter lab
+const updateSingleVMDatacenterLabContent = async(req,res)=>{
+    try {
+       const labGuideFile = req.files?.labGuide?.[0]; // new file if any
+       const userGuideFile = req.files?.userGuide?.[0];
+       let {labId , title ,description ,startDate,endDate,software,existingLabGuide,existingUserGuide,credentials} = req.body;
+       const finalLabGuide = [existingLabGuide, labGuideFile?.path].filter(Boolean);
+      const finalUserGuide = [existingUserGuide, userGuideFile?.path].filter(Boolean);
+        software = software.length > 0 ? JSON.parse(software) : null;
+       const result = await labService.updateSingleVMDatacenterLab(title,description,startDate,endDate,finalLabGuide,finalUserGuide,labId,software,JSON.parse(credentials));
+       if(!result){
+        return res.status(400).send({
+            success:false,
+            message:"Could not edit the lab"
+        })
+       }
+       return res.status(200).send({
+        success:true,
+        message:"Successfully edited the lab",
+        data:result
+       })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({
+            success:true,
+            message:"Error in editing the lab",
+            error:error.message
+        })
+    }
+}
+
 const getLabOnId = async(req,res)=>{
     try{
         const {labId} = req.body;
@@ -72,6 +430,282 @@ const getLabOnId = async(req,res)=>{
             success:false,
             message:"Error in getting the lab",
             error,
+        })
+    }
+}
+
+//assign single vm datacenter lab to organization
+const assignSingleVmDatacenterLab = async (req, res) => {
+    try {   
+        const { labId, orgId, assignedBy, catalogueName } = req.body;
+        if (!labId || !orgId || !assignedBy || !catalogueName) {
+            return res.status(400).send({
+                success: false,
+                message: "labId, orgId, assignedBy, and catalogueName are required",
+            });
+        }
+        const result = await labService.createDatacenterLabOrgAssignment(labId, orgId, assignedBy, catalogueName);
+        if (!result || result.length === 0) {
+            return res.status(404).send({
+                success: false,
+                message: "No assignment found for the provided labId and orgId",
+            });
+        }
+        return res.status(200).send({
+            success: true,
+            message: "Successfully assigned the single VM datacenter lab to the organization",
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error in assigning single VM datacenter lab:", error);
+        return res.status(500).send({
+            success: false,
+            message: "Error in assigning the single VM datacenter lab",
+            error: error.message,
+        });
+    }
+};
+//get the org assigned labs
+const getOrgAssignedSingleVMDatacenterLab = async(req,res)=>{
+    try {
+        const {orgId} = req.body;
+        if( !orgId){
+            return res.status(404).send({
+                success:false,
+                message:"Please Provide the labid or orgid"
+            })
+        }
+        const result = await labService.getOrgAssignedsingleVMDatacenterLab(orgId);
+        if(!result){
+            return res.status(400).send({
+                success:false,
+                message:"No lab is found for this organization for this lab"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully Fetched the lab",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Error in getting the lab",
+            error,
+        })
+    }
+}
+//assign single vm datacenter credentials to organization
+const assignSingleVmDatacenterLabCredentialsToOrg = async (req, res) => {
+    try {
+        const { labId, orgAssigned, assignedBy } = req.body;
+        if (!labId || !orgAssigned || !assignedBy) {
+            return res.status(400).send({
+                success: false,
+                message: "labId, orgAssigned, and assignedBy are required",
+            });
+        }
+        const result = await labService.assignSingleVmDatacenterCredsToOrg(labId, orgAssigned, assignedBy);
+        if (!result || result.length === 0) {
+            return res.status(404).send({
+                success: false,
+                message: "No credentials found for the provided labId",
+            });
+        }
+        console.log(result)
+        return res.status(200).send({
+            success: true,
+            message: "Successfully assigned the single VM datacenter lab credentials to the organization",
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error in assigning single VM datacenter lab credentials:", error);
+        return res.status(500).send({
+            success: false,
+            message: "Error in assigning the single VM datacenter lab credentials",
+            error: error.message,
+        });
+    }
+};
+
+//edit single vm datacenter lab credentials
+const editSingleVmDatacenterLabCredentials = async (req, res) => {
+    try {
+        const { username, password, ip, port, protocol, id, labId } = req.body;
+        console.log(username, password, ip, port, protocol, id, labId);
+        if (!username || !password || !ip || !port || !protocol || !id || !labId) {
+            return res.status(400).send({
+                success: false,
+                message: "All fields are required: username, password, ip, port, protocol, id, and labId",
+            });
+        }
+        const result = await labService.editSingleVmDatacenterCreds(username, password, ip, port, protocol, id, labId);
+        if (!result || result.length === 0) {
+            return res.status(404).send({
+                success: false,
+                message: "No credentials found for the provided id and labId",
+            });
+        }
+        return res.status(200).send({
+
+            success: true,
+            message: "Successfully edited the single VM datacenter lab credentials",
+            data: result,
+
+        });
+    } catch (error) {
+        console.error("Error in editing single VM datacenter lab credentials:", error);
+        return res.status(500).send({
+            success: false,
+            message: "Error in editing the single VM datacenter lab credentials",
+            error: error.message,
+        });
+    }
+};
+//update the single vm datacenter creds
+const updateSingleVmDatacenterCredsDisable = async(req,res)=>{
+    try {
+        const {id,disable} = req.body;
+        console.log(req.body)
+        if(!id){
+            return res.status(400).send({
+                success:false,
+                message:"Please Provide the field id"
+            })
+        }
+        const result = await labService.updateSingleVmDatacenterCredsDisable(id,disable);
+        if(!result){
+            return res.status(404).send({
+                success:false,
+                message:"No credentials found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully updated the credentials",
+            data:result
+        })
+    } catch (error) {
+         console.error("Error in editing single VM datacenter lab credentials:", error);
+        return res.status(500).send({
+            success: false,
+            message: "Error in editing the single VM datacenter lab credentials",
+            error: error.message,
+        });
+    }
+}
+//delete the single vm datacenter lab
+const deleteSingleVmDatacenterLab = async(req,res)=>{
+    try {
+        const  labId = req.params.labId;
+        if(!labId){
+             return res.status(400).send({
+                success: false,
+                message: "All fields are required: username, password, ip, port, protocol, id, and labId",
+            });
+        }
+        const result = await labService.deleteSingleVmDatacenterLab(labId);
+        return res.status(200).send({
+            success:true,
+            message:"Successfully deleted the lab",
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Error in deleting the single vm datacenter lab",
+            error:error.message
+        })
+    }
+}
+
+//assign single vm datacenter lab to users
+
+const assignSingleVMDatacenterLabToUsers = async(req,res)=>{
+    try {
+        const data =  req.body;
+        const result =  await labService.assignSingleVmDatacenterLabToUser(data);
+        if(!result){
+            return res.status(400).send({
+                success:false,
+                message:"Could not assign the lab to user"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully assigned lab to user",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Error in assigning single vm datacenter lab to user",
+            error:error.message
+        })
+    }
+}
+
+const getUserAssignedSingleVMDatacenterCredsToUser = async(req,res)=>{
+    try {
+        const {labId,userId} = req.body;
+        if(!userId || !labId){
+            return res.status(404).send({
+                success:false,
+                message:"Please Provide the required fields"
+            })
+        }
+        const result =  await labService.getUserAssignedSingleVMDatacenterCredsToUser(labId,userId);
+        if(!result){
+            return res.status(400).send({
+                success:false,
+                message:'No Lab credentials found for this user'
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully accessed the lab credentials",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Error in getting the single vm datacenter lab credentials for user",
+            error:error.message
+        })
+    }
+}
+//const get user assigned datacenter single vm labs
+
+const getUserAssignedSingleVMDatacenterLabs = async(req,res)=>{
+    try {
+        const {userId} = req.params;
+        if(!userId){
+            return res.status(404).send({
+                success:false,
+                message:"Please Provide the user id"
+            })
+        }
+        const result =  await labService.getUserAssignedSingleVMDatacenterLabs(userId);
+        if(!result){
+            return res.status(400).send({
+                success:false,
+                message:'No Labs found for this user'
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:"Successfully accessed the labs",
+            data:result
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success:false,
+            message:"Error in getting the single vm datacenter lab",
+            error:error.message
         })
     }
 }
@@ -691,5 +1325,24 @@ module.exports = {
     getAssignLabOnLabId,
     UpdateSingleVmLabStatus,
     getCount,
-    getCloudSliceOrgLabs
+    getCloudSliceOrgLabs,
+    createSingleVmDatacenterLab,
+    getDatacenterLabOnAdminId,
+    getDatacenterLabCredentials,
+    updateSingleVmDatacenterLab,
+    assignSingleVmDatacenterLab,
+    assignSingleVmDatacenterLabCredentialsToOrg,
+    editSingleVmDatacenterLabCredentials,
+    deleteSingleVmDatacenterLab,
+    updateSingleVmDatacenterCredsDisable,
+    getOrgAssignedSingleVMDatacenterLab,
+    getDatacenterLabOnLabId,
+    assignSingleVMDatacenterLabToUsers,
+    getUserAssignedSingleVMDatacenterLabs,
+    getUserAssignedSingleVMDatacenterCredsToUser,
+    connectDatacenterVM,
+    updateSingleVMDatacenterUserCredRunningState,
+    deleteSingleVMDatacenterLabOfUser,
+    deleteSingleVMDatacenterLabFromOrg,
+    updateSingleVMDatacenterLabContent
 }

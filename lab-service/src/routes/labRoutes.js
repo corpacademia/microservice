@@ -1,4 +1,7 @@
 const express = require('express');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 const { createLab,
     getAllLab,
     getLabOnId,
@@ -23,12 +26,50 @@ const { createLab,
     getAssignLabOnLabId,
     UpdateSingleVmLabStatus,
     getCount,
-    getCloudSliceOrgLabs
+    getCloudSliceOrgLabs,
+    createSingleVmDatacenterLab,
+    getDatacenterLabOnAdminId,
+    getDatacenterLabCredentials,
+    updateSingleVmDatacenterLab,
+    assignSingleVmDatacenterLab,
+    assignSingleVmDatacenterLabCredentialsToOrg,
+    editSingleVmDatacenterLabCredentials,
+    deleteSingleVmDatacenterLab,
+    updateSingleVmDatacenterCredsDisable,
+    getOrgAssignedSingleVMDatacenterLab,
+    getDatacenterLabOnLabId,
+    assignSingleVMDatacenterLabToUsers,
+    getUserAssignedSingleVMDatacenterLabs,
+    getUserAssignedSingleVMDatacenterCredsToUser,
+    connectDatacenterVM,
+    updateSingleVMDatacenterUserCredRunningState,
+    deleteSingleVMDatacenterLabOfUser,
+    deleteSingleVMDatacenterLabFromOrg,
+    updateSingleVMDatacenterLabContent
 } = require('../controllers/labController');
 
 const router = express.Router();
 
+const uploadDir = path.join(__dirname, '../public/uploads/');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Set up multer storage options
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir); // Use the correct folder path
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${file.originalname}}`); // Unique file names
+  },
+});
+
+// Create the upload middleware using multer
+const upload = multer({ storage });
+
 router.post('/labconfig',createLab);
+router.post('/createSingleVmDatacenterLab',createSingleVmDatacenterLab);
 router.get('/getCatalogues',getAllLab);
 router.post('/getLabOnId',getLabOnId); 
 router.post('/assignlab',assignLab);
@@ -54,6 +95,26 @@ router.get('/getOs',getOperatingSystemsFromDatabase);
 router.post('/getAssignLabOnId',getAssignLabOnLabId);
 router.post('/updateSingleVmStatus',UpdateSingleVmLabStatus);
 router.get('/getCountoflabs/:userId',getCount);
-router.get('/getCloudSliceLabsOfOrg/:orgId',getCloudSliceOrgLabs)
-
+router.get('/getCloudSliceLabsOfOrg/:orgId',getCloudSliceOrgLabs);
+router.post('/getDatacenterLabOnAdminId', getDatacenterLabOnAdminId);
+router.post('/getDatacenterLabCreds',getDatacenterLabCredentials);
+router.post('/updatesinglevmdatacenter',updateSingleVmDatacenterLab);
+router.post('/singleVMDatacenterLabOrgAssignment', assignSingleVmDatacenterLab)
+router.post('/assignLabCredsToOrg',assignSingleVmDatacenterLabCredentialsToOrg)
+router.post('/editSingleVmDatacenterCreds',editSingleVmDatacenterLabCredentials);
+router.delete('/deleteSingleVMDatacenterLab/:labId',deleteSingleVmDatacenterLab);
+router.post('/updateSingleVmDatacenterLabCreds',updateSingleVmDatacenterCredsDisable);
+router.post('/getOrgAssignedSingleVMDatacenterLab',getOrgAssignedSingleVMDatacenterLab);
+router.post("/getSingleVmDatacenterLabOnId",getDatacenterLabOnLabId);
+router.post("/assignSingleVmDatacenterLabToUser",assignSingleVMDatacenterLabToUsers);
+router.post('/getUserAssignedSingleVmDatacenterLabs/:userId',getUserAssignedSingleVMDatacenterLabs)
+router.post('/getUserAssignedSingleVMDatacenterCredsToUser',getUserAssignedSingleVMDatacenterCredsToUser);
+router.post('/connectToDatacenterVm',connectDatacenterVM);
+router.post('/updateSingleVmDatacenterUserAssignment',updateSingleVMDatacenterUserCredRunningState);
+router.post('/deleteSingleVmDatacenterUserAssignment',deleteSingleVMDatacenterLabOfUser);
+router.post('/deleteAssignedSingleVMDatacenterLab',deleteSingleVMDatacenterLabFromOrg);
+router.post('/updateSingleVmDatacenterLab',upload.fields([
+  { name: 'labGuide', maxCount: 1 },
+  { name: 'userGuide', maxCount: 1 }
+]),updateSingleVMDatacenterLabContent )
 module.exports = router;
