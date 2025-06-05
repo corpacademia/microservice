@@ -18,8 +18,15 @@ dotenv.config();
 
 const signupController = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-        const user = await userServices.signupService(name, email, password);
+        const { name, email, password , organization,isNewOrganization } = req.body;
+        console.log(req.body)
+        if(!name|| !email || !password || !organization ){
+          return res.status(404).send({
+            success:false,
+            message:"Please Provide All the required fields"
+          })
+        }
+        const user = await userServices.signupService(name, email, password,organization,isNewOrganization);
 
         if (!user) {
             return res.status(405).send({

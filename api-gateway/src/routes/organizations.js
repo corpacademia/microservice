@@ -7,7 +7,7 @@ require('dotenv').config();
 
 
 router.use(
-    "/",verifyToken,
+    "/",
     createProxyMiddleware({
       target: process.env.ORG_SERVICE_URL || "http://localhost:3004",
       changeOrigin: true,

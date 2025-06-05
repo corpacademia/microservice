@@ -128,6 +128,23 @@ const updateOrganizationService = async (orgId, data, logo) => {
     }
 };
 
+//update organization admin
+const updateOrganizationAdmin = async(orgAdmin,id)=>{
+    try {
+        if(!orgAdmin || !id){
+            throw new Error("Please Provide the required fields");
+        }
+        const result = await pool.query(queries.UPDATE_ORGANIZATION_ADMIN,[orgAdmin,id]);
+        if(!result.rows.length){
+            throw new Error("No Organization found to update its admin");
+        }
+        return result.rows[0];
+    } catch (error) {
+        console.log("Error in updating the admin");
+        throw new Error("Error in updating the admin:",error);
+    }
+}
+
 const deleteOrganizationsService = async (orgIds) => {
     try {
         const result = await pool.query(queries.DELETE_ORGANIZATION, [orgIds]);
@@ -146,4 +163,5 @@ module.exports = {
     getOrganizationStatsService,
     updateOrganizationService,
     deleteOrganizationsService,
+    updateOrganizationAdmin
 }

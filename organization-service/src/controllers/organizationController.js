@@ -186,6 +186,32 @@ const editOrganizationModal = async (req, res) => {
     }
 };
 
+//update the organization admin
+const updateOrganizationAdmin = async(req,res)=>{
+    try {
+        const {orgAdmin ,Id } = req.body
+        const result = await organizationServices.updateOrganizationAdmin(orgAdmin,Id);
+        if(!result){
+            return res.status(400).send({
+                success:false,
+                message:"Could not update the organization admin"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:'Successfully updated organization admin',
+            data:result
+        })
+    } catch (error) {
+       console.log(error);
+       return res.status(500).send({
+        success:false,
+        message:"Error in updating organization admin",
+        error:error.message
+       }) 
+    }
+}
+
 const deleteOrganization = async (req, res) => {
     try {
         const { orgIds } = req.body;
@@ -232,5 +258,6 @@ module.exports = {
     getOrganizationStats,
     editOrganizationModal,
     deleteOrganization,
+    updateOrganizationAdmin
 
 }

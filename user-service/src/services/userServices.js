@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config(); 
 
-const signupService = async (name, email, password) => {
+const signupService = async (name, email, password,organization,isNewOrganization) => {
     try {
        const existingUser = await pool.query(userQueries.getUserByEmailQuery, [email]);
     if (existingUser.rows.length > 0) {
@@ -18,7 +18,14 @@ const signupService = async (name, email, password) => {
     throw new Error('User with this email already exists in the organization');
     }
         const hashedPassword = await hashPassword(password);
-        const result = await pool.query(userQueries.insertUserQuery, [name, email, hashedPassword]);
+        let result;
+        if(!isNewOrganization || organization.org_admin !== null){
+             result = await pool.query(userQueries.insertUserQuery, [name, email, hashedPassword,organization.org_admin,organization.organization_name,organization.org_type,organization.id]);
+        }
+        else{
+           result = await pool.query(userQueries.insertAdminUserQuery,[name,email,hashedPassword,organization.organization_name,organization.org_type,'orgadmin',organization.id])
+        }
+              
 
         // 3. Prepare email HTML
  const templatePath = path.join(

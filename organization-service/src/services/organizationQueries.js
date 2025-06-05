@@ -35,4 +35,5 @@ module.exports = {
     DELETE_ORGANIZATION: `
         DELETE FROM organizations WHERE id = ANY($1) RETURNING *;
     `,
+    UPDATE_ORGANIZATION_ADMIN:`UPDATE organizations set org_admin=$1 where id=$2 RETURNING *`
 };

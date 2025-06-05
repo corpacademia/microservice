@@ -1,5 +1,7 @@
 module.exports = {
-    insertUserQuery : `INSERT INTO organization_users (name, email, password) VALUES ($1, $2, $3) RETURNING *`,
+    insertUserQuery : `INSERT INTO organization_users (name, email, password,admin_id,organization,organization_type,org_id) VALUES ($1, $2, $3,$4,$5,$6,$7) RETURNING *`,
+    insertAdminUserQuery : `INSERT INTO users (name, email, password,organization,organization_type,role,org_id) VALUES ($1, $2, $3,$4,$5,$6,$7) RETURNING *`,
+
     getUserByEmailQuery: `SELECT * FROM users WHERE email = $1`,
     getOrgUserByEmailQuery: `SELECT * FROM organization_users WHERE email = $1`,
     updateUserLastActiveQuery : `UPDATE users SET lastactive = $1, status = 'active' WHERE email = $2 RETURNING *`,
