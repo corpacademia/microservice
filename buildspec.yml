@@ -3,7 +3,8 @@ version: 0.2
 env:
   variables:
     AWS_REGION: us-east-1
-    ECR_REPO_PREFIX: golabing
+    AWS_ACCOUNT_ID: "751057572977"
+    ECR_REPO_PREFIX: golabing-corpacademia
     SERVICES: "api-gateway aws-service cloud-slice-service lab-service organization-service user-service workspace-service"
 
 phases:
@@ -11,7 +12,7 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - aws --version
-      - $(aws ecr get-login --no-include-email --region $AWS_REGION)
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
       - echo Using image tag: $IMAGE_TAG
@@ -37,4 +38,3 @@ phases:
 artifacts:
   files:
     - '**/*'
-
