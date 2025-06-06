@@ -1,17 +1,40 @@
 version: 0.2
 
+env:
+  variables:
+    AWS_REGION: us-east-1
+    ECR_REPO_PREFIX: corpacademia-golabing
+    SERVICES: "api-gateway aws-service cloud-slice-service lab-service organization-service user-service workspace-service"
+
 phases:
-  install:
-    runtime-versions:
-      nodejs: 18
+  pre_build:
     commands:
-      - npm install
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - $(aws ecr get-login --no-include-email --region $AWS_REGION)
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - echo Using image tag: $IMAGE_TAG
 
   build:
     commands:
-      - npm run build
+      - echo Building Docker images for all microservices...
+      - for service in $SERVICES; do
+          echo "Building $service...";
+          docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:$IMAGE_TAG $service;
+          docker tag $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:latest;
+        done
+
+  post_build:
+    commands:
+      - echo Pushing images to ECR...
+      - for service in $SERVICES; do
+          echo "Pushing $service:$IMAGE_TAG and :latest";
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:$IMAGE_TAG;
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:latest;
+        done
 
 artifacts:
   files:
     - '**/*'
-  base-directory: dist
+
