@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     AWS_REGION: us-east-1
-    ECR_REPO_PREFIX: corpacademia-golabing
+    ECR_REPO_PREFIX: golabing
     SERVICES: "api-gateway aws-service cloud-slice-service lab-service organization-service user-service workspace-service"
 
 phases:
