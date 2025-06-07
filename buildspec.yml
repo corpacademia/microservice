@@ -20,17 +20,18 @@ phases:
   build:
     commands:
       - echo Building Docker images for all microservices...
-      - |
+      - >
         for service in $SERVICES; do
           echo "Building $service...";
           docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:$IMAGE_TAG $service;
-          docker tag $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:latest;
+          docker tag $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:$IMAGE_TAG
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:latest;
         done
 
   post_build:
     commands:
       - echo Pushing images to ECR...
-      - |
+      - >
         for service in $SERVICES; do
           echo "Pushing $service:$IMAGE_TAG and :latest";
           docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_PREFIX/$service:$IMAGE_TAG;
