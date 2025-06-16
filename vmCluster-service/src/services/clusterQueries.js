@@ -1,0 +1,23 @@
+module.exports = {
+    INSERT_LAB_DETAILS:`INSERT INTO vmclusterdatacenter_lab(user_id,title,description,type,platform,labguide,userguide,startdate,enddate) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+    INSERT_VM_DETAILS:`INSERT INTO vmclusterdatacenter_vms(lab_id,vmid,vmname,protocol,created_at) VALUES($1,$2,$3,$4,NOW()) RETURNING *`,
+    INSERT_USERVM_DETAILS:`INSERT INTO vmclusterdatacenter_uservms(labid,vmid,username,password,ip,port,usergroup) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    GET_ALL_LABS_ON_USERID:`SELECT * FROM vmclusterdatacenter_lab where user_id=$1`,
+    GET_VM_DETAILS_ON_LABID:`SELECT * FROM vmclusterdatacenter_vms where lab_id=$1`,
+    GET_VM_DETAILS_ON_VMID:`SELECT * FROM vmclusterdatacenter_vms where vmid=$1`,
+    GET_VM_DETAILS_ON_VMNAME:`SELECT * FROM vmclusterdatacenter_vms where lab_id=$1 and vmname=$2`,
+    GET_USER_VM_CREDS:`SELECT * FROM vmclusterdatacenter_uservms where labid=$1`,
+     GET_USER_VM_CRED_ON_ID:`SELECT * FROM vmclusterdatacenter_uservms where id=$1`,
+    DELETE_LAB_FROM_ADMIN:'DELETE FROM vmclusterdatacenter_lab where labid=$1',
+    DELETE_VMS_ON_LABID:`DELETE FROM vmclusterdatacenter_vms where lab_id=$1`,
+    DELETE_VMS_ON_LABID_ID:`DELETE FROM vmclusterdatacenter_vms where lab_id=$1 AND id=$2`,
+    DELETE_USERVMS_ON_LABID:`DELETE FROM vmclusterdatacenter_uservms where labid=$1`,
+    DELETE_USERVMS_ON_LABID_ID:`DELETE FROM vmclusterdatacenter_uservms where id=$1 and labid=$2`,
+    UPDATE_VMCLUSTER_DATACENTER_LAB:`UPDATE vmclusterdatacenter_lab set title=$1,description=$2,startdate=$3,enddate=$4,software=$5,userguide=$6,labguide=$7 where labid=$8 RETURNING *`,
+    UPDATE_VMCLUSTER_DATACENTER_VMS:`UPDATE vmclusterdatacenter_vms set vmname=$1,protocol=$2 where lab_id=$3 and vmid=$4 RETURNING *`,
+    UPDATE_VMCLUSTER_DATACENTER_USERVMS:`UPDATE vmclusterdatacenter_uservms set username=$1,password=$2,ip=$3,port=$4,usergroup=$5 where labid=$6 and vmid=$7 and id=$8 RETURNING *`,
+
+    DELETE_VMS_ON_LABID_ID:`DELETE FROM vmclusterdatacenter_vms where lab_id=$1 AND id=$2`,
+    // DELETE_USERVMS_ON_LABID_ID:`DELETE FROM vmclusterdatacenter_uservms where labid=$1 id=$2`,
+
+}

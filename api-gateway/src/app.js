@@ -44,5 +44,6 @@ app.use('/api/v1/aws_ms', require('./routes/aws_service'));
 app.use('/api/v1/organization_ms', require('./routes/organizations'));
 app.use('/api/v1/workspace_ms', require('./routes/workspaces'));
 app.use('/api/v1/cloud_slice_ms', require('./routes/cloudSliceService'));
+app.use('/api/v1/vmcluster_ms',require('./routes/vmClusterService'));
 
 module.exports = app;
