@@ -9,8 +9,8 @@ phases:
       - npm install
   build:
     commands:
-      - echo Building app
-      - npm run build
+      - echo No build step required
+
 artifacts:
   files:
     - '**/*'
