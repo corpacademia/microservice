@@ -16,7 +16,9 @@ module.exports = {
     UPDATE_VMCLUSTER_DATACENTER_LAB:`UPDATE vmclusterdatacenter_lab set title=$1,description=$2,startdate=$3,enddate=$4,software=$5,userguide=$6,labguide=$7 where labid=$8 RETURNING *`,
     UPDATE_VMCLUSTER_DATACENTER_VMS:`UPDATE vmclusterdatacenter_vms set vmname=$1,protocol=$2 where lab_id=$3 and vmid=$4 RETURNING *`,
     UPDATE_VMCLUSTER_DATACENTER_USERVMS:`UPDATE vmclusterdatacenter_uservms set username=$1,password=$2,ip=$3,port=$4,usergroup=$5 where labid=$6 and vmid=$7 and id=$8 RETURNING *`,
-
+    UPDATE_VMCLUSTER_DATACENTER_USERVMS_UPDATE:`UPDATE vmclusterdatacenter_uservms set username=$1,password=$2,ip=$3,port=$4 where id=$5 RETURNING *`,
+    UPDATE_VMCLUSTER_DATACENTER_VMS_PROTOCOL:`UPDATE vmclusterdatacenter_vms set protocol=$1 where vmid=$2 RETURNING *`,
+    UPDATE_VMCLUSTER_DATACENTER_USERVMS_DISABLE:`UPDATE vmclusterdatacenter_uservms set disabled=$1 where id=$2 RETURNING *`,
     DELETE_VMS_ON_LABID_ID:`DELETE FROM vmclusterdatacenter_vms where lab_id=$1 AND id=$2`,
     // DELETE_USERVMS_ON_LABID_ID:`DELETE FROM vmclusterdatacenter_uservms where labid=$1 id=$2`,
 

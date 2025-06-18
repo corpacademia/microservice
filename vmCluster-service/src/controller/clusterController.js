@@ -131,9 +131,65 @@ const updateSingleVMDatacenterLab = async(req,res)=>{
     }
 }
 
+//update the uservm enable/disable
+const updateUserVM = async(req,res)=>{
+    try {
+         const data = req.body;
+        const result = await clusterService.updateUserVM(data);
+        if(!result){
+             return res.status(400).send({
+             success:false,
+             message:"Could not update the vmcluster datacenter lab"
+             })
+            }
+   return res.status(200).send({
+    success:true,
+    message:"Successfully updated the vmcluster datacenter lab",
+    data:result
+   })
+    } catch (error) {
+        console.log("Error in updating the vmcluster datacenter lab:",error.message);
+        return res.status(500).send({
+            success:false,
+            message:"Error in updating the vmcluster datacenter lab",
+            error:error.message
+        })
+    }
+  
+
+}
+
+//update the uservm details
+const updateUserVMWithProtocol = async(req,res)=>{
+    try {
+        const data = req.body;
+        const result =  await clusterService.updateUserVMWithProtocol(data);
+        if(!result){
+            return res.status(400).send({
+                success:false,
+                message:"No user vm found with this id"
+            })
+        }
+        return res.status(200).send({
+            success:true,
+            message:'Successfully updated the user vm',
+            data:result
+        })
+    } catch (error) {
+        console.log("Error in updating the user vm details",error);
+        return res.status(500).send({
+            success:false,
+            message:'Error in updating the user vm details',
+            error:error.message
+        })
+    }
+}
+
 module.exports = {
     createVMClusterDatacenterLab,
     getVMClusterDatacenterlab,
     deleteDatacenterLab,
-    updateSingleVMDatacenterLab
+    updateSingleVMDatacenterLab,
+    updateUserVM,
+    updateUserVMWithProtocol
 }

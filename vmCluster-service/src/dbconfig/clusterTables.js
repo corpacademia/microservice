@@ -61,6 +61,19 @@ const createTables = async()=>{
   
             `)
 
+        //create table for orgassignment
+       await pool.query(`
+        CREATE TABLE IF NOT EXISTS vmclusterdatacenterorgassignment (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        labid UUID NOT NULL,
+        orgid UUID NOT NULL,
+        assigned_at TIMESTAMP DEFAULT NOW(),
+        status TEXT DEFAULT 'available',
+        cataloguename TEXT
+        );
+
+        `)
+
 }
 
 createTables();

@@ -9,7 +9,9 @@ const {
     createVMClusterDatacenterLab,
     getVMClusterDatacenterlab,
     deleteDatacenterLab,
-    updateSingleVMDatacenterLab
+    updateSingleVMDatacenterLab,
+    updateUserVM,
+    updateUserVMWithProtocol
 } = require('../controller/clusterController');
 
 const uploadDir = path.join(__dirname, '../public/uploads/');
@@ -37,5 +39,7 @@ router.post('/updateClusterLab',upload.fields([
     {'name':'userGuide',maxCount:5},
     {'name':'labGuide' , maxCount:5}
 ]),updateSingleVMDatacenterLab)
+router.post('/updateClusterVmCredentials',updateUserVM);
+router.post('/editClusterVmCredentials',updateUserVMWithProtocol)
 
 module.exports = router;

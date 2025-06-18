@@ -128,10 +128,12 @@ const updateVMClusterDatacenterLab = async(labId , title ,description ,startDate
     for(const vmConfig of vmConfigs){
       const vm = await pool.query(clusterQueries.GET_VM_DETAILS_ON_VMID,[vmConfig.id])
       if(vm.rows.length){
+        console.log('existing',vmConfig)
         const updateVM = await pool.query(clusterQueries.UPDATE_VMCLUSTER_DATACENTER_VMS,[vmConfig.name,vmConfig.protocol, labId,vmConfig.id])
         vmCredentialsId.add(updateVM.rows[0].id)
       }
       else{
+        console.log('new one',vmConfig)
         const insertVM = await pool.query(clusterQueries.INSERT_VM_DETAILS,[labId,vmConfig.id,vmConfig.name,vmConfig.protocol]);
         vmCredentialsId.add(insertVM.rows[0].id)
       }
@@ -174,9 +176,45 @@ const updateVMClusterDatacenterLab = async(labId , title ,description ,startDate
 
 }
 
+//update the disable/enable of user vm
+const updateUserVM =  async(data)=>{
+  try {
+    const {id,disable} = data;
+    if(!id ){
+      throw new Error("Please Provide the required fields");
+    }
+    const result = await pool.query(clusterQueries.UPDATE_VMCLUSTER_DATACENTER_USERVMS_DISABLE,[disable,id]);
+    return result.rows[0];
+  } catch (error) {
+    console.log("Error in updating datacenter vmcluster lab",error);
+    throw new Error("Error in updating the vmcluster datacenter lab:",error.message)
+  }
+}
+
+//update the uservm with protcol
+const updateUserVMWithProtocol = async(data)=>{
+  try {
+    console.log(data)
+    const {id,username,password,ip,port}= data;
+    if(!username || !password || !ip ||!port ||!id){
+      throw new Error('Please Provide the required fields');
+    }
+    const result = await pool.query(clusterQueries.UPDATE_VMCLUSTER_DATACENTER_USERVMS_UPDATE,[username,password,ip,port,id]);
+    if(!result.rows.length){
+      throw new Error("Could not update the uservm")
+    }
+    return result.rows[0];
+  } catch (error) {
+    console.log("Error in updating the uservm details",error);
+    throw new Error("Error in updating the uservm details",error.message);
+  }
+}
+
 module.exports = {
     createVMClusterDatacenterLab,
     getVMClusterDatacenterlab,
     deleteDatacenterLab,
-    updateVMClusterDatacenterLab
+    updateVMClusterDatacenterLab,
+    updateUserVM,
+    updateUserVMWithProtocol
 };
